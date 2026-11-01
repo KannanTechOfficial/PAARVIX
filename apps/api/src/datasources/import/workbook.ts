@@ -364,7 +364,7 @@ export async function readHeader(rows: AsyncIterable<unknown[]>): Promise<string
 export async function sweepTempFolders(maxAgeMs = 60 * 60 * 1000): Promise<void> {
   const base = tmpdir();
   for (const f of await readdir(base)) {
-    if (!f.startsWith('paarvix-xlsx-')) continue;
+    if (!f.startsWith('paarvix-xlsx-') || f.startsWith('paarvix-xlsx-job-')) continue;
     const path = join(base, f);
     const info = await stat(path).catch(() => undefined);
     if (info?.isDirectory() && Date.now() - info.mtimeMs > maxAgeMs) await rm(path, { recursive: true, force: true });
