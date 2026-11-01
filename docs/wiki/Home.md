@@ -32,3 +32,4 @@ OmniViz is designed as a modern, lightweight, self-hosted alternative to Grafana
 * **Default Branch:** `Canary`
 * **Discussions:** [GitHub Discussions](https://github.com/KannanTechOfficial/omniviz/discussions)
 * **Issue Tracker:** [Bug Reports & Feature Requests](https://github.com/KannanTechOfficial/omniviz/issues)
+

@@ -53,3 +53,4 @@ body:
       placeholder: "e.g. 0.1.0-alpha.0 (or commit hash)"
     validations:
       required: false
+

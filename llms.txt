@@ -1,20 +1,27 @@
-# Paarvix
+# OmniViz (powered by Paarvix Core)
 
-> Open-source, self-hosted data dashboards for colleges, hospitals, shops, factories and growing companies. Paarvix connects Excel, Google Sheets, MySQL and PostgreSQL on the organisation's own server. It is licensed under AGPLv3 and made by KannanTech in India.
+> Open-source, AI-native, self-hosted data visualisation, analytics and observability platform. An ultra-lightweight, self-hosted Grafana & Metabase alternative built with Angular 22 Zoneless Signals and NestJS Fastify. Connects Excel, Google Sheets, MySQL, MariaDB, and PostgreSQL on your own server. Runs smoothly on a 2GB RAM / 1 vCPU single container with zero cloud dependencies and no telemetry.
 
-Status: early alpha. Data connections and previews work. The dashboard builder, sector packs, alerts and AI are planned, not available yet.
+Status: Alpha (Production Preview). Data connections, columnar schema discovery, live preview, 10,000-node cluster observability simulation with LTTB downsampling, and bilingual AI Copilot (English & Tamil) are fully functional.
 
-Paarvix reads data and does not change it. It is not an ERP or accounting system. It supports Indian number and date formats, and English and Tamil.
+## Core Capabilities
+- **Multi-Source Ingestion**: Excel (.xlsx up to 50MB), Google Sheets, MySQL, MariaDB, PostgreSQL with read-only sandbox enforcement (30s timeout, 10k row limit).
+- **Observability Engine**: High-frequency telemetry pipeline handling 10,000+ nodes with Largest-Triangle-Three-Buckets (LTTB) downsampling from 10,000 points down to 500 render points in <15ms.
+- **AI Copilot**: Provider-agnostic natural language query assistant supporting English and Tamil (பார்வை - Paarvai).
+- **Indian Locale Support**: Native parsing for Indian currency (`₹1,25,000`), DD-MM-YYYY dates, and Tamil text/columns.
+- **Privacy & Security**: 100% self-hosted, AES-256 envelope encryption, no phone-home telemetry.
 
-## Docs
+## Documentation & Wiki
+- [OmniViz Wiki Portal](https://github.com/KannanTechOfficial/omniviz/wiki)
+- [Architecture & Tech Stack](https://github.com/KannanTechOfficial/omniviz/blob/Canary/docs/wiki/Architecture.md)
+- [Getting Started & Docker Quickstart](https://github.com/KannanTechOfficial/omniviz/blob/Canary/docs/wiki/Getting-Started.md)
+- [Data Sources & Connectors](https://github.com/KannanTechOfficial/omniviz/blob/Canary/docs/wiki/Data-Sources-and-Connectors.md)
+- [Observability & 10,000-Node Scaling](https://github.com/KannanTechOfficial/omniviz/blob/Canary/docs/wiki/Observability-and-Scaling.md)
+- [Security & RBAC](https://github.com/KannanTechOfficial/omniviz/blob/Canary/docs/wiki/Security-and-Permissions.md)
 
-- [Getting started](docs/guide/getting-started.md): install and first login
-- [Connecting your data](docs/guide/connecting-data.md): Excel, Google Sheets, MySQL, PostgreSQL
-- [Sectors and customising](docs/guide/sectors-and-customising.md): how sector packs will work
-- [Roadmap](docs/roadmap.md): stages and status
-
-## Project
-
-- [License](LICENSE): GNU AGPL v3.0
-- [Security policy](SECURITY.md)
-- [Contributing](CONTRIBUTING.md)
+## Repository & Community
+- GitHub: https://github.com/KannanTechOfficial/omniviz
+- Website: https://kannantech.com
+- Discussions: https://github.com/KannanTechOfficial/omniviz/discussions
+- Issues: https://github.com/KannanTechOfficial/omniviz/issues
+- License: GNU AGPL v3.0 (Commercial licenses available via KannanTech)

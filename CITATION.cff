@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use OmniViz in your research or production analytics, please cite it as below."
+authors:
+  - family-names: "Kannan"
+    given-names: "Venkatesan"
+    affiliation: "KannanTech"
+    website: "https://kannantech.com"
+title: "OmniViz: Open-Source AI-Native Data Visualisation & Observability Engine"
+version: 0.1.0-alpha
+date-released: 2026-11-01
+url: "https://github.com/KannanTechOfficial/omniviz"
+repository-code: "https://github.com/KannanTechOfficial/omniviz"
+keywords:
+  - "data visualization"
+  - "observability"
+  - "self-hosted"
+  - "timeseries"
+  - "angular"
+  - "nestjs"
+  - "duckdb"
+license: AGPL-3.0
