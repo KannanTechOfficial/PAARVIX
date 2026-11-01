@@ -1,0 +1,50 @@
+# Paarvix API Dockerfile
+FROM node:24-alpine AS builder
+
+WORKDIR /app
+
+# Copy root workspace configurations and package files
+COPY package.json tsconfig.base.json prisma.config.ts ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/shared/package.json ./packages/shared/
+
+# Install dependencies across workspace
+RUN npm install --legacy-peer-deps
+
+# Copy source code
+COPY packages/shared ./packages/shared
+COPY apps/api ./apps/api
+
+# Build @paarvix/shared
+WORKDIR /app/packages/shared
+RUN /app/node_modules/.bin/tsc
+
+# Generate Prisma Client from root
+WORKDIR /app
+RUN ./node_modules/.bin/prisma generate --schema=apps/api/prisma/schema.prisma
+
+# Build API
+WORKDIR /app/apps/api
+RUN npm run build
+
+# Production Runner
+FROM node:24-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV API_PORT=3000
+ENV API_HOST=0.0.0.0
+
+COPY package.json prisma.config.ts ./
+COPY apps/api/package.json ./apps/api/
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/shared ./packages/shared
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+
+WORKDIR /app/apps/api
+
+EXPOSE 3000
+
+CMD ["sh", "-c", "cd /app && ./node_modules/.bin/prisma db push --accept-data-loss && cd /app/apps/api && node dist/src/main.js"]

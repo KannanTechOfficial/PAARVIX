@@ -1,0 +1,12 @@
+{
+  "name": "@paarvix/shared",
+  "version": "0.1.0-alpha.0",
+  "description": "Shared types and contracts for Paarvix",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "license": "AGPL-3.0-only"
+}
+

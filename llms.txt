@@ -1,0 +1,20 @@
+# Paarvix
+
+> Open-source, self-hosted data dashboards for colleges, hospitals, shops, factories and growing companies. Paarvix connects Excel, Google Sheets, MySQL and PostgreSQL on the organisation's own server. It is licensed under AGPLv3 and made by KannanTech in India.
+
+Status: early alpha. Data connections and previews work. The dashboard builder, sector packs, alerts and AI are planned, not available yet.
+
+Paarvix reads data and does not change it. It is not an ERP or accounting system. It supports Indian number and date formats, and English and Tamil.
+
+## Docs
+
+- [Getting started](docs/guide/getting-started.md): install and first login
+- [Connecting your data](docs/guide/connecting-data.md): Excel, Google Sheets, MySQL, PostgreSQL
+- [Sectors and customising](docs/guide/sectors-and-customising.md): how sector packs will work
+- [Roadmap](docs/roadmap.md): stages and status
+
+## Project
+
+- [License](LICENSE): GNU AGPL v3.0
+- [Security policy](SECURITY.md)
+- [Contributing](CONTRIBUTING.md)

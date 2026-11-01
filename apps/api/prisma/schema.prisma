@@ -1,0 +1,120 @@
+// Paarvix — See your data clearly.
+// Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+// Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  name         String
+  passwordHash String      @map("password_hash")
+  role         UserRole    @default(VIEWER)
+  isActive     Boolean     @default(true) @map("is_active")
+  avatarUrl    String?     @map("avatar_url")
+  language     String      @default("en")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  dashboards   Dashboard[]
+  datasources  Datasource[]
+  queries      Query[]
+
+  @@map("users")
+}
+
+model Dashboard {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  slug        String   @unique
+  config      Json     @default("{}")
+  isPublic    Boolean  @default(false) @map("is_public")
+  shareToken  String?  @unique @map("share_token")
+  createdBy   String   @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  creator     User     @relation(fields: [createdBy], references: [id])
+
+  @@map("dashboards")
+}
+
+model Datasource {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  config      Json     @default("{}")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdBy   String   @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  creator     User     @relation(fields: [createdBy], references: [id])
+  queries     Query[]
+  dataTables  DataTable[]
+
+  @@map("datasources")
+}
+
+/// One imported sheet. The rows live in paarvix_data.<storage_name>, which Prisma does not manage.
+model DataTable {
+  id           String     @id @default(cuid())
+  datasourceId String     @map("datasource_id")
+  name         String
+  storageName  String     @map("storage_name") // paarvix_data.t_<id>, generated, never user text
+  columns      Json
+  rowCount     Int        @map("row_count")
+  syncedAt     DateTime   @map("synced_at")
+  datasource   Datasource @relation(fields: [datasourceId], references: [id], onDelete: Cascade)
+
+  @@unique([datasourceId, name])
+  @@map("data_tables")
+}
+
+model Query {
+  id           String     @id @default(cuid())
+  name         String
+  datasourceId String     @map("datasource_id")
+  querySpec    Json       @map("query_spec")
+  createdBy    String     @map("created_by")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  datasource   Datasource @relation(fields: [datasourceId], references: [id])
+  creator      User       @relation(fields: [createdBy], references: [id])
+
+  @@map("queries")
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value Json
+  
+  @@map("settings")
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  domain      String
+  config      Json
+  isBuiltIn   Boolean  @default(false) @map("is_built_in")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("templates")
+}

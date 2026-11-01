@@ -1,0 +1,57 @@
+# Paarvix — See your data clearly.
+# Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+# Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: paarvix-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: paarvix
+      POSTGRES_PASSWORD: paarvix_secret
+      POSTGRES_DB: paarvix
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paarvix -d paarvix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: paarvix-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://paarvix:paarvix_secret@postgres:5432/paarvix
+      JWT_SECRET: ${JWT_SECRET:?Run ./install.sh to create secrets}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Run ./install.sh to create secrets}
+      PAARVIX_ENCRYPTION_KEY: ${PAARVIX_ENCRYPTION_KEY:?Run ./install.sh to create secrets}
+      API_PORT: 3000
+      API_HOST: 0.0.0.0
+      CORS_ORIGINS: http://localhost:4200,http://localhost:80
+    ports:
+      - "3000:3000"
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    container_name: paarvix-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "4200:80"
+
+volumes:
+  postgres_data:
+

@@ -1,0 +1,68 @@
+/*
+ * Paarvix — See your data clearly.
+ * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+ * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+ * Commercial licenses: paarvix@kannantech.com
+ */
+
+// === Paarvix Design Tokens ===
+
+// Brand Colors
+$pvx-deep-blue: #1E3A8A;
+$pvx-teal: #14B8A6;
+$pvx-orange: #F97316;
+
+// Neutrals (Slate)
+$pvx-slate-50: #F8FAFC;
+$pvx-slate-100: #F1F5F9;
+$pvx-slate-200: #E2E8F0;
+$pvx-slate-300: #CBD5E1;
+$pvx-slate-400: #94A3B8;
+$pvx-slate-500: #64748B;
+$pvx-slate-600: #475569;
+$pvx-slate-700: #334155;
+$pvx-slate-800: #1E293B;
+$pvx-slate-900: #0F172A;
+$pvx-slate-950: #020617;
+
+// Semantic Colors
+$pvx-success: #22C55E;
+$pvx-warning: #EAB308;
+$pvx-error: #EF4444;
+$pvx-info: $pvx-deep-blue;
+
+// Spacing
+$pvx-space-1: 4px;
+$pvx-space-2: 8px;
+$pvx-space-3: 12px;
+$pvx-space-4: 16px;
+$pvx-space-5: 20px;
+$pvx-space-6: 24px;
+$pvx-space-8: 32px;
+$pvx-space-10: 40px;
+$pvx-space-12: 48px;
+$pvx-space-16: 64px;
+
+// Typography
+$pvx-font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$pvx-font-code: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+$pvx-font-marketing: 'Poppins', $pvx-font-ui;
+
+// Border Radius
+$pvx-radius-sm: 4px;
+$pvx-radius-md: 8px;
+$pvx-radius-lg: 12px;
+$pvx-radius-xl: 16px;
+$pvx-radius-full: 9999px;
+
+// Elevation
+$pvx-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$pvx-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+$pvx-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+$pvx-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+// Transitions
+$pvx-transition-fast: 150ms ease;
+$pvx-transition-normal: 250ms ease;
+$pvx-transition-slow: 350ms ease;
+

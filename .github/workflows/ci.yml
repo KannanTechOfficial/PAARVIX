@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  validate:
+    name: Lint, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for secrets
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.24.0 \
+            detect --source=/repo --config=/repo/.gitleaks.toml --redact --no-banner
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      # elkjs (EPL-2.0) is excluded by exact version: it arrives only through Prisma Studio.
+      - name: Check dependency licenses
+        run: |
+          npx -y license-checker@25.0.1 --production --excludePrivatePackages \
+            --excludePackages 'elkjs@0.11.1' \
+            --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;MPL-2.0;AGPL-3.0-only;AGPL-3.0-or-later;Unlicense'
+
+      - name: Generate Prisma client
+        working-directory: apps/api
+        run: npx prisma generate
+
+      - name: Build Shared Package
+        working-directory: packages/shared
+        run: npx tsc
+
+      - name: Build API
+        working-directory: apps/api
+        run: npm run build
+
+      - name: Build Web
+        if: hashFiles('apps/web/package.json') != ''
+        working-directory: apps/web
+        run: npm run build --if-present
+
+      - name: Run Tests
+        working-directory: apps/api
+        run: npm run test --if-present -- --passWithNoTests
+
