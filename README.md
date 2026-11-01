@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src=".github/assets/social-preview.png" alt="OmniViz — Open-Source AI-Native Analytics & Observability Platform" width="100%">
+
 # OmniViz
 
 ### See your data clearly. (Powered by Paarvix Core)
