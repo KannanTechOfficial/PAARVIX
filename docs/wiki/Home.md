@@ -1,8 +1,8 @@
-# Welcome to the OmniViz Wiki
+# Welcome to the Paarvix Wiki
 
-> **OmniViz** (powered by Paarvix core by [KannanTech](https://kannantech.com)) is an open-source, AI-native real-time data visualisation, analytics, and observability platform.
+> **Paarvix** by [KannanTech](https://kannantech.com) is an open-source, AI-native real-time data visualisation, analytics, and observability platform.
 
-OmniViz is designed as a modern, lightweight, self-hosted alternative to Grafana and Metabase. It empowers small businesses, colleges, factories, and growing organizations to connect their existing data (Excel, Google Sheets, MySQL, PostgreSQL) and observe complex infrastructure (up to 10,000+ Linux & Kubernetes nodes) without needing an expensive dedicated data team or per-user licensing fees.
+Paarvix is designed as a modern, lightweight, self-hosted alternative to Grafana and Metabase. It empowers small businesses, colleges, factories, and growing organizations to connect their existing data (Excel, Google Sheets, MySQL, PostgreSQL) and observe complex infrastructure (up to 10,000+ Linux & Kubernetes nodes) without needing an expensive dedicated data team or per-user licensing fees.
 
 ---
 
@@ -28,8 +28,8 @@ OmniViz is designed as a modern, lightweight, self-hosted alternative to Grafana
 
 ## 🔗 Useful Links
 
-* **Source Code:** [GitHub Repository](https://github.com/KannanTechOfficial/omniviz)
+* **Source Code:** [GitHub Repository](https://github.com/KannanTechOfficial/PAARVIX)
 * **Default Branch:** `Canary`
-* **Discussions:** [GitHub Discussions](https://github.com/KannanTechOfficial/omniviz/discussions)
-* **Issue Tracker:** [Bug Reports & Feature Requests](https://github.com/KannanTechOfficial/omniviz/issues)
+* **Discussions:** [GitHub Discussions](https://github.com/KannanTechOfficial/PAARVIX/discussions)
+* **Issue Tracker:** [Bug Reports & Feature Requests](https://github.com/KannanTechOfficial/PAARVIX/issues)
 

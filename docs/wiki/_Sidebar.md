@@ -1,4 +1,4 @@
-### OmniViz Documentation
+### Paarvix Documentation
 * **[Home](Home)**
 * **[Getting Started](Getting-Started)**
 * **[System Architecture](Architecture)**
@@ -8,7 +8,7 @@
 
 ---
 ### Community & Support
-* [GitHub Repository](https://github.com/KannanTechOfficial/omniviz)
-* [Discussions](https://github.com/KannanTechOfficial/omniviz/discussions)
-* [Report an Issue](https://github.com/KannanTechOfficial/omniviz/issues)
+* [GitHub Repository](https://github.com/KannanTechOfficial/PAARVIX)
+* [Discussions](https://github.com/KannanTechOfficial/PAARVIX/discussions)
+* [Report an Issue](https://github.com/KannanTechOfficial/PAARVIX/issues)
 

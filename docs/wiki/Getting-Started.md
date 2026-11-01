@@ -1,6 +1,6 @@
-# Getting Started with OmniViz
+# Getting Started with Paarvix
 
-Deploy OmniViz in less than 2 minutes using Docker Compose or native scripts.
+Deploy Paarvix in less than 2 minutes using Docker Compose or native scripts.
 
 ---
 
@@ -20,8 +20,8 @@ Deploy OmniViz in less than 2 minutes using Docker Compose or native scripts.
 Clone the repository and run the automated installation script:
 
 ```bash
-git clone -b Canary https://github.com/KannanTechOfficial/omniviz.git
-cd omniviz
+git clone -b Canary https://github.com/KannanTechOfficial/PAARVIX.git
+cd PAARVIX
 ./install.sh
 ```
 

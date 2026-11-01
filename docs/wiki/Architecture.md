@@ -1,6 +1,6 @@
-# OmniViz System Architecture
+# Paarvix System Architecture
 
-OmniViz is engineered from the ground up as a **modular monolith** optimized for sub-second interactions, zero GC thrashing, and low hardware resource consumption.
+Paarvix is engineered from the ground up as a **modular monolith** optimized for sub-second interactions, zero GC thrashing, and low hardware resource consumption.
 
 ---
 
@@ -21,7 +21,7 @@ OmniViz is engineered from the ground up as a **modular monolith** optimized for
 ## 🏗️ Monorepo Structure
 
 ```
-omniviz/
+paarvix/
 ├── apps/
 │   ├── api/             # NestJS Fastify API Gateway
 │   └── web/             # Angular 22 Single Page Application
@@ -37,7 +37,7 @@ omniviz/
 
 ## ⚡ Columnar DataFrame Architecture
 
-Unlike standard JSON arrays (`Array<Record<string, unknown>>`) which allocate millions of small heap objects and cause garbage collection stutter, OmniViz uses typed columnar vectors:
+Unlike standard JSON arrays (`Array<Record<string, unknown>>`) which allocate millions of small heap objects and cause garbage collection stutter, Paarvix uses typed columnar vectors:
 
 ```ts
 export interface Field<T = any> {
