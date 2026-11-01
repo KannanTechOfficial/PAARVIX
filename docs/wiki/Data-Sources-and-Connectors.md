@@ -29,3 +29,4 @@ OmniViz connects to your existing business data wherever it lives.
 ## 🛡️ Isolated Import Worker
 
 Spreadsheet parsing runs inside an isolated worker process (`import-worker.ts`) bounded by memory caps and strict execution deadlines. If a malformed or corrupt spreadsheet is uploaded, it cannot crash the main API server.
+

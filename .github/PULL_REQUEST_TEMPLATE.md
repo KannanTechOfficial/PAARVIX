@@ -3,7 +3,7 @@
 <!-- Briefly describe the changes introduced in this pull request and the problem they solve. -->
 
 ## Changes Included
-- 
+-
 
 ## Verification & Testing
 - [ ] Monorepo build passes: `npm --prefix packages/shared run build && npm --prefix apps/api run build && npm --prefix apps/web run build`
@@ -13,3 +13,4 @@
 
 ## Related Issues
 Fixes #
+

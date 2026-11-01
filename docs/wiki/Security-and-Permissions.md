@@ -21,3 +21,4 @@ Security and data ownership are core architectural principles in OmniViz.
    * Query limits (10,000 rows max, 30s timeout) prevent Denial of Service.
 5. **No Telemetry / Egress:**
    * Your data remains strictly on your server. OmniViz does not send phone-home telemetry.
+

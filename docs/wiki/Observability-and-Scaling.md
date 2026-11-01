@@ -42,3 +42,4 @@ OmniViz includes an AI-native root cause engine providing executive summaries an
 * **NVMe Storage Saturation (`node-1209`, Mumbai):** Flags uncompacted Kafka write queues at 96.5% disk fullness before node goes into `DiskPressure`.
 * **Network Ingress Congestion (`node-3320`, Frankfurt):** Identifies 1.2% packet drop rate during simultaneous backup replications.
 * **One-Click Remediation:** Instant trigger buttons (`DRAIN_NODE`, `EXPAND_DISK`, `APPLY_QOS`) with WhatsApp and Slack notification hooks.
+

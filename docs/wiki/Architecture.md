@@ -56,3 +56,4 @@ export interface ColumnarDataFrame {
 ```
 
 This structure feeds directly into Canvas renderers without intermediate conversions, allowing smooth 60fps chart interactions.
+
