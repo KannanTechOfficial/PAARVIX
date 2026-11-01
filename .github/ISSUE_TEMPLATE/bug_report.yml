@@ -1,0 +1,55 @@
+name: "🐛 Bug Report"
+description: "File a bug report to help us improve OmniViz"
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the sections below to help us reproduce and fix it quickly.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe the problem...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Deployment Environment
+      options:
+        - Docker Compose
+        - Native Linux (Ubuntu/Debian)
+        - macOS
+        - Windows WSL2
+        - Kubernetes / Helm
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: OmniViz Version
+      placeholder: "e.g. 0.1.0-alpha.0 (or commit hash)"
+    validations:
+      required: false
