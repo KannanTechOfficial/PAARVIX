@@ -41,7 +41,8 @@ tmp/
 temp/
 *.tgz
 .playwright-mcp/
-*.png
+/*.png
+!docs/assets/*.png
 
 # Grafana source for clean-room research only. Never commit or copy it (CLAUDE.md §16.5).
 /grafana/
