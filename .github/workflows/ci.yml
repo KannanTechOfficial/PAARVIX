@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master, Canary, canary]
+    branches: [Canary]
   pull_request:
-    branches: [main, master, Canary, canary]
+    branches: [Canary]
 
 jobs:
   validate:

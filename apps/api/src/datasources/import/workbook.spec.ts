@@ -125,7 +125,7 @@ const miniXlsx = (name: string, sheetXml: string, extra: ZipEntry[] = []) => zip
 const inline = (ref: string, v: string) => `<c r="${ref}" t="inlineStr"><is><t>${v}</t></is></c>`;
 const sheetWith = (rows: string) => `<worksheet><sheetData>${rows}</sheetData></worksheet>`;
 
-const ours = async () => (await readdir(tmpdir())).filter((f) => f.startsWith('paarvix-xlsx-'));
+const ours = async () => (await readdir(tmpdir())).filter((f) => f.startsWith('paarvix-xlsx-') && !f.startsWith('paarvix-xlsx-job-'));
 
 /** Reads every sheet fully: name, header and data rows. */
 async function load(path: string, limits?: Partial<Limits>) {
