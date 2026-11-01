@@ -1,0 +1,25 @@
+# Paarvix secret and personal-data scan. Student data is sensitive by default.
+title = "Paarvix"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "india-aadhaar"
+description = "Possible Aadhaar number"
+regex = '''\b[2-9][0-9]{3}[ -]?[0-9]{4}[ -]?[0-9]{4}\b'''
+
+[[rules]]
+id = "india-mobile"
+description = "Possible Indian mobile number"
+regex = '''(?:\+91[ -]?)?\b[6-9][0-9]{9}\b'''
+
+[[rules]]
+id = "hardcoded-password"
+description = "Password written directly in code"
+regex = '''(?i)\bpassword\s*[:=]\s*['"][^'"\s]{8,}['"]'''
+
+[allowlist]
+paths = ['''package-lock\.json$''', '''\.gitleaks\.toml$''']
+# Made-up numbers that test phone-number handling.
+regexes = ['''9876543210''', '''9123456780''']

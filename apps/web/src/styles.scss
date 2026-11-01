@@ -1,0 +1,69 @@
+/*
+ * Paarvix — See your data clearly.
+ * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+ * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+ * Commercial licenses: paarvix@kannantech.com
+ */
+
+@use 'styles/variables' as *;
+
+:root {
+  --pvx-primary: #{$pvx-deep-blue};
+  --pvx-accent: #{$pvx-teal};
+  --pvx-warn: #{$pvx-orange};
+  --pvx-danger: #b91c1c;
+  --pvx-bg: #{$pvx-slate-50};
+  --pvx-bg-card: #ffffff;
+  --pvx-bg-sidebar: #{$pvx-slate-900};
+  --pvx-text: #{$pvx-slate-900};
+  --pvx-text-muted: #{$pvx-slate-500};
+  --pvx-border: #{$pvx-slate-200};
+  --pvx-font-ui: #{$pvx-font-ui};
+  --pvx-font-code: #{$pvx-font-code};
+  --pvx-radius: #{$pvx-radius-md};
+}
+
+[data-theme='dark'] {
+  --pvx-danger: #fca5a5;
+  --pvx-bg: #{$pvx-slate-950};
+  --pvx-bg-card: #{$pvx-slate-900};
+  --pvx-bg-sidebar: #{$pvx-slate-950};
+  --pvx-text: #{$pvx-slate-100};
+  --pvx-text-muted: #{$pvx-slate-400};
+  --pvx-border: #{$pvx-slate-700};
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--pvx-font-ui);
+  background-color: var(--pvx-bg);
+  color: var(--pvx-text);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--pvx-primary);
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+code,
+pre {
+  font-family: var(--pvx-font-code);
+}

@@ -1,0 +1,118 @@
+{
+  "app": {
+    "name": "Paarvix",
+    "tagline": "See your data clearly."
+  },
+  "nav": {
+    "dashboards": "Dashboards",
+    "datasources": "Data Sources",
+    "queries": "Queries",
+    "templates": "Templates",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In",
+    "forgotPassword": "Forgot password?",
+    "setup": {
+      "title": "Welcome to Paarvix",
+      "subtitle": "Create your admin account to get started.",
+      "name": "Full Name",
+      "createAccount": "Create Admin Account"
+    }
+  },
+  "dashboard": {
+    "create": "New Dashboard",
+    "empty": "No dashboards yet",
+    "emptyAction": "Create your first dashboard or try a template",
+    "tryTemplate": "Try a Template",
+    "uploadExcel": "Upload Excel",
+    "emptyTitle": "No dashboards yet",
+    "emptyHint": "Apply a template to get started."
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "success": "Success",
+    "confirm": "Are you sure?"
+  },
+  "templates": {
+    "apply": "Apply template",
+    "remove": "Remove",
+    "open": "Open dashboard",
+    "failed": "Could not change this template. Only admins can do this.",
+    "connectFirst": "Connect a data source first"
+  },
+  "datasources": {
+    "test": "Test",
+    "remove": "Remove",
+    "empty": "No data sources connected yet.",
+    "name": "Name",
+    "host": "Host",
+    "port": "Port",
+    "database": "Database",
+    "user": "User",
+    "password": "Password",
+    "save": "Save",
+    "add": "Add a data source",
+    "chooseType": "Choose a source type",
+    "type": {
+      "excel": "Excel file",
+      "gsheet": "Google Sheet",
+      "mysql": "MySQL / MariaDB",
+      "postgres": "PostgreSQL"
+    },
+    "excelFile": "Excel file (.xlsx)",
+    "excelHint": "Only .xlsx files up to 50 MB are accepted.",
+    "headerNote": "The first row of each sheet is used as the column names.",
+    "sheetLink": "Google Sheet link",
+    "sheetHint": "Make the sheet public or share it with Paarvix, then paste its link here.",
+    "serviceKey": "Private key (optional, for private sheets)",
+    "serviceKeyHint": "Paste the service account key only if the sheet is private. It is stored encrypted and never shown again.",
+    "refresh": "Refresh automatically",
+    "refreshOff": "Off",
+    "minutes": "minutes",
+    "readOnlyUser": "Please connect with a read-only database user. Paarvix only reads data, but a read-only user keeps your database safe.",
+    "ssl": "Use a secure connection (SSL)",
+    "uploading": "Uploading",
+    "errNotXlsx": "Please choose an Excel file ending in .xlsx.",
+    "errTooBig": "This file is larger than 50 MB. Please remove unused sheets or rows and try again.",
+    "errNoFile": "Please choose an Excel file first.",
+    "errRequired": "Please fill in all the required fields.",
+    "errSave": "Could not save this data source.",
+    "errTest": "The connection test failed.",
+    "errSync": "Could not refresh this sheet.",
+    "errRemove": "Could not remove this data source.",
+    "errSchema": "Could not read the tables of this source.",
+    "errRows": "Could not load the rows of this table.",
+    "errLoad": "Could not load your data sources.",
+    "viewData": "View data",
+    "sync": "Sync now",
+    "replaceFile": "Replace file",
+    "synced": "Sheet refreshed.",
+    "replaced": "File replaced.",
+    "lastSynced": "Last synced",
+    "neverSynced": "Not synced yet",
+    "syncFailed": "The last refresh failed:",
+    "loading": "Loading…",
+    "noTables": "This source has no tables yet.",
+    "tables": "Tables",
+    "columns": "Columns",
+    "colType": {
+      "number": "number",
+      "date": "date",
+      "boolean": "yes/no",
+      "text": "text"
+    },
+    "firstRows": "First 50 rows",
+    "noRows": "This table has no rows.",
+    "onlyFirst": "Only the first rows are shown."
+  }
+}

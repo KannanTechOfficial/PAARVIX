@@ -1,0 +1,55 @@
+{
+  "name": "paarvix",
+  "version": "0.1.0-alpha.0",
+  "description": "Paarvix — See your data clearly. Open-source AI-native data visualisation & analytics platform.",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "cd apps/api && npm run start:dev",
+    "dev:web": "cd apps/web && ng serve",
+    "build:api": "cd apps/api && npm run build",
+    "build:web": "cd apps/web && ng build",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "docker:up": "docker compose --env-file .env -f docker/docker-compose.yml up -d",
+    "docker:down": "docker compose --env-file .env -f docker/docker-compose.yml down"
+  },
+  "keywords": [
+    "dashboard",
+    "data-visualization",
+    "analytics",
+    "angular",
+    "nestjs",
+    "fastify",
+    "self-hosted",
+    "open-source",
+    "ai",
+    "business-intelligence"
+  ],
+  "author": "Kannan / KannanTech <paarvix@kannantech.com> (https://kannantech.com)",
+  "license": "AGPL-3.0-only",
+  "homepage": "https://github.com/KannanTechOfficial/PAARVIX",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KannanTechOfficial/PAARVIX.git"
+  },
+  "bugs": {
+    "url": "https://github.com/KannanTechOfficial/PAARVIX/issues"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "prisma": "^7.10.1"
+  }
+}
