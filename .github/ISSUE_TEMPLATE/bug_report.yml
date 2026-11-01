@@ -1,5 +1,5 @@
 name: "🐛 Bug Report"
-description: "File a bug report to help us improve OmniViz"
+description: "File a bug report to help us improve Paarvix"
 title: "[Bug]: "
 labels: ["bug", "triage"]
 body:
@@ -49,7 +49,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: OmniViz Version
+      label: Paarvix Version
       placeholder: "e.g. 0.1.0-alpha.0 (or commit hash)"
     validations:
       required: false

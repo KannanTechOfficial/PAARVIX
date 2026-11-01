@@ -1,6 +1,6 @@
 # Observability & 10,000-Node Scale
 
-OmniViz features an enterprise-grade observability engine designed to monitor large-scale distributed infrastructure (10,000+ Linux servers and Kubernetes worker nodes) without the massive operational complexity and RAM requirements of legacy observability stacks.
+Paarvix features an enterprise-grade observability engine designed to monitor large-scale distributed infrastructure (10,000+ Linux servers and Kubernetes worker nodes) without the massive operational complexity and RAM requirements of legacy observability stacks.
 
 ---
 
@@ -36,7 +36,7 @@ When viewing time-series data for a node over 24 hours, thousands of raw data po
 
 ## 🤖 Bilingual AI Observability Copilot
 
-OmniViz includes an AI-native root cause engine providing executive summaries and anomaly diagnoses in **English and Tamil (தமிழ்)**:
+Paarvix includes an AI-native root cause engine providing executive summaries and anomaly diagnoses in **English and Tamil (தமிழ்)**:
 
 * **Containerd Memory Leak (`node-4081`, US East):** Detects monotonically increasing RSS with swap thrashing at 2.1 GB/s. Recommends: `kubectl drain node-4081`.
 * **NVMe Storage Saturation (`node-1209`, Mumbai):** Flags uncompacted Kafka write queues at 96.5% disk fullness before node goes into `DiskPressure`.

@@ -1,13 +1,13 @@
-# OmniViz Issue Template
+# Paarvix Issue Template
 
-Thank you for reporting an issue or suggesting an enhancement for **OmniViz**!
+Thank you for reporting an issue or suggesting an enhancement for **Paarvix**!
 
 Please use one of our specific issue forms if possible:
-- [Bug Report](https://github.com/KannanTechOfficial/omniviz/issues/new?template=bug_report.yml)
-- [Feature Request](https://github.com/KannanTechOfficial/omniviz/issues/new?template=feature_request.yml)
+- [Bug Report](https://github.com/KannanTechOfficial/PAARVIX/issues/new?template=bug_report.yml)
+- [Feature Request](https://github.com/KannanTechOfficial/PAARVIX/issues/new?template=feature_request.yml)
 
 For questions, discussions, or community help:
-- [GitHub Discussions](https://github.com/KannanTechOfficial/omniviz/discussions)
+- [GitHub Discussions](https://github.com/KannanTechOfficial/PAARVIX/discussions)
 
 ---
 
@@ -23,7 +23,7 @@ For questions, discussions, or community help:
 <!-- What did you expect to happen? -->
 
 ### Environment
-- **OmniViz Version**: (e.g. 0.1.0-alpha)
+- **Paarvix Version**: (e.g. 0.1.0-alpha)
 - **OS**: (Linux, macOS, Windows)
 - **Browser**: (Chrome, Firefox, Safari)
 - **Node.js**: (v20+)

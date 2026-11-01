@@ -1,6 +1,6 @@
 # Data Sources & Connectors
 
-OmniViz connects to your existing business data wherever it lives.
+Paarvix connects to your existing business data wherever it lives.
 
 ---
 

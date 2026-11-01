@@ -1,6 +1,6 @@
 # Security & Permissions
 
-Security and data ownership are core architectural principles in OmniViz.
+Security and data ownership are core architectural principles in Paarvix.
 
 ---
 
@@ -20,5 +20,5 @@ Security and data ownership are core architectural principles in OmniViz.
    * User file imports run in memory-capped sub-processes.
    * Query limits (10,000 rows max, 30s timeout) prevent Denial of Service.
 5. **No Telemetry / Egress:**
-   * Your data remains strictly on your server. OmniViz does not send phone-home telemetry.
+   * Your data remains strictly on your server. Paarvix does not send phone-home telemetry.
 

@@ -1,9 +1,9 @@
 blank_issues_enabled: false
 contact_links:
   - name: 💬 GitHub Discussions
-    url: https://github.com/KannanTechOfficial/omniviz/discussions
+    url: https://github.com/KannanTechOfficial/PAARVIX/discussions
     about: Ask questions, discuss features, or get help with self-hosting.
   - name: 🔒 Report a Security Vulnerability
-    url: https://github.com/KannanTechOfficial/omniviz/security/advisories/new
+    url: https://github.com/KannanTechOfficial/PAARVIX/security/advisories/new
     about: Privately report a security issue to the KannanTech security team.
 

@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src=".github/assets/social-preview.png" alt="OmniViz — Open-Source AI-Native Analytics & Observability Platform" width="100%">
+<img src=".github/assets/social-preview.png" alt="Paarvix — open-source, self-hosted data dashboards" width="100%">
 
-# OmniViz
+# Paarvix
 
-### See your data clearly. (Powered by Paarvix Core)
+### See your data clearly.
 
 **Open-source, AI-native data visualisation, analytics, and observability platform.**  
 Self-hosted Grafana & Metabase alternative. Connect Excel, Google Sheets, MySQL, MariaDB, or PostgreSQL on your own server with zero data team, zero cloud lock-in, and zero per-user fees.
@@ -13,12 +13,12 @@ Self-hosted Grafana & Metabase alternative. Connect Excel, Google Sheets, MySQL,
 [![Status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)](docs/roadmap.md)
 [![Built with Angular](https://img.shields.io/badge/Angular-22-dd0031.svg)](https://angular.dev)
 [![Built with NestJS](https://img.shields.io/badge/NestJS-12-e0234e.svg)](https://nestjs.com)
-[![GitHub Discussions](https://img.shields.io/badge/Discussions-Join-teal.svg)](https://github.com/KannanTechOfficial/omniviz/discussions)
-[![Wiki Documentation](https://img.shields.io/badge/Docs-Wiki-purple.svg)](https://github.com/KannanTechOfficial/omniviz/wiki)
+[![GitHub Discussions](https://img.shields.io/badge/Discussions-Join-teal.svg)](https://github.com/KannanTechOfficial/PAARVIX/discussions)
+[![Wiki Documentation](https://img.shields.io/badge/Docs-Wiki-purple.svg)](https://github.com/KannanTechOfficial/PAARVIX/wiki)
 
-[Getting Started](docs/wiki/Getting-Started.md) · [Architecture](docs/wiki/Architecture.md) · [Observability Engine](docs/wiki/Observability-and-Scaling.md) · [Data Sources](docs/wiki/Data-Sources-and-Connectors.md) · [Wiki](https://github.com/KannanTechOfficial/omniviz/wiki) · [Discussions](https://github.com/KannanTechOfficial/omniviz/discussions)
+[Getting Started](docs/wiki/Getting-Started.md) · [Architecture](docs/wiki/Architecture.md) · [Observability Engine](docs/wiki/Observability-and-Scaling.md) · [Data Sources](docs/wiki/Data-Sources-and-Connectors.md) · [Wiki](https://github.com/KannanTechOfficial/PAARVIX/wiki) · [Discussions](https://github.com/KannanTechOfficial/PAARVIX/discussions)
 
-![OmniViz Data Sources preview](docs/assets/data-sources.png)
+![Paarvix Data Sources preview](docs/assets/data-sources.png)
 
 </div>
 
@@ -26,9 +26,9 @@ Self-hosted Grafana & Metabase alternative. Connect Excel, Google Sheets, MySQL,
 
 ---
 
-## What is OmniViz?
+## What is Paarvix?
 
-OmniViz is an open-source, AI-native analytics and observability platform designed to give organisations instant clarity over their operational data and telemetry. Powered by the **Paarvix Core** engine (*Paarvai* / பார்வை, meaning vision in Tamil), OmniViz eliminates expensive BI and monitoring stacks by running fully on your own infrastructure on as little as **2 GB RAM and 1 vCPU**.
+Paarvix is an open-source, AI-native analytics and observability platform designed to give organisations instant clarity over their operational data and telemetry. Powered by the **Paarvix Core** engine (*Paarvai* / பார்வை, meaning vision in Tamil), Paarvix eliminates expensive BI and monitoring stacks by running fully on your own infrastructure on as little as **2 GB RAM and 1 vCPU**.
 
 It is engineered for both non-technical decision makers (principals, shop owners, hospital admins) and engineers needing real-time cluster telemetry without JVM bloat or SaaS pricing.
 
@@ -59,9 +59,9 @@ It is engineered for both non-technical decision makers (principals, shop owners
 
 ---
 
-## OmniViz vs Other Platforms
+## Paarvix vs Other Platforms
 
-| Feature | OmniViz | Grafana | Metabase | Apache Superset |
+| Feature | Paarvix | Grafana | Metabase | Apache Superset |
 |:---|:---:|:---:|:---:|:---:|
 | **Server Footprint** | **< 512 MB RAM** | Moderate | Heavy (JVM 2GB+) | Heavy (Python 2GB+) |
 | **Setup Time** | **< 2 minutes** | 30+ minutes | 15 minutes | 45+ minutes |
@@ -76,11 +76,11 @@ It is engineered for both non-technical decision makers (principals, shop owners
 
 ## Quick Start (Docker)
 
-Run OmniViz locally or on any cloud server:
+Run Paarvix locally or on any cloud server:
 
 ```bash
-git clone https://github.com/KannanTechOfficial/omniviz.git
-cd omniviz
+git clone https://github.com/KannanTechOfficial/PAARVIX.git
+cd PAARVIX
 ./install.sh
 ```
 
@@ -99,8 +99,8 @@ Manage lifecycle:
 
 ```bash
 # Clone the repository
-git clone https://github.com/KannanTechOfficial/omniviz.git
-cd omniviz
+git clone https://github.com/KannanTechOfficial/PAARVIX.git
+cd PAARVIX
 
 # Install dependencies
 npm install
@@ -120,7 +120,7 @@ npm run dev:web
 
 ## Documentation & Wiki
 
-Comprehensive technical guides are available in the [OmniViz Wiki](https://github.com/KannanTechOfficial/omniviz/wiki) and repository:
+Comprehensive technical guides are available in the [Paarvix Wiki](https://github.com/KannanTechOfficial/PAARVIX/wiki) and repository:
 - [Architecture & Columnar DataFrames](docs/wiki/Architecture.md)
 - [Data Sources & Security Sandboxing](docs/wiki/Data-Sources-and-Connectors.md)
 - [10,000-Node Observability & Downsampling](docs/wiki/Observability-and-Scaling.md)
@@ -131,14 +131,14 @@ Comprehensive technical guides are available in the [OmniViz Wiki](https://githu
 
 ## Community & Contributing
 
-- Join discussions and feature ideas on [GitHub Discussions](https://github.com/KannanTechOfficial/omniviz/discussions).
-- Report bugs and security considerations via [Issues](https://github.com/KannanTechOfficial/omniviz/issues) and [SECURITY.md](SECURITY.md).
+- Join discussions and feature ideas on [GitHub Discussions](https://github.com/KannanTechOfficial/PAARVIX/discussions).
+- Report bugs and security considerations via [Issues](https://github.com/KannanTechOfficial/PAARVIX/issues) and [SECURITY.md](SECURITY.md).
 - Read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before submitting Pull Requests.
 
 ---
 
 ## License
 
-OmniViz is licensed under the [GNU Affero General Public License v3.0 (AGPLv3)](LICENSE).  
+Paarvix is licensed under the [GNU Affero General Public License v3.0 (AGPLv3)](LICENSE).  
 Copyright (C) 2026 Kannan / KannanTech (https://kannantech.com).  
 Commercial licensing and enterprise support: [paarvix@kannantech.com](mailto:paarvix@kannantech.com).
