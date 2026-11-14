@@ -62,3 +62,11 @@ client_secret*.json
 
 # Monaco is copied here from node_modules by apps/web/scripts/copy-monaco.mjs
 apps/web/public/assets/monaco/
+
+# Licence keys and signing keys never enter this repository.
+*.pem
+*.key
+*.lic
+.paarvix-keys/
+paarvix-license*.txt
+issued-licenses*.jsonl
