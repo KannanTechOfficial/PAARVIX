@@ -136,7 +136,7 @@ export class MysqlConnector implements Connector {
   }
 
   async runSql(ds: LoadedDatasource, sql: string, values: unknown[], _ctx: SecurityContext): Promise<QueryResult> {
-    const text = assertReadOnlySql(sql);
+    const text = assertReadOnlySql(sql, 'mysql');
     const res = await readOnly(ds, `SELECT * FROM (${text}) AS paarvix_q LIMIT ${MAX_ROWS + 1}`, values);
     return { fields: res.fields, ...trimRows(res.rows) };
   }

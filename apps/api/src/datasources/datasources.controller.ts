@@ -104,6 +104,27 @@ export class DatasourcesController {
     return this.datasourcesService.accessMatrix();
   }
 
+  @Get('rules')
+  @RequirePermissions('datasources:access')
+  rules() {
+    this.features.assertEnabled('rows.rules');
+    return this.datasourcesService.listRules();
+  }
+
+  @Post(':id/rules')
+  @RequirePermissions('datasources:access')
+  addRule(@Param('id') id: string, @Body() body: { roleId: string; column: string; attribute: string }) {
+    this.features.assertEnabled('rows.rules');
+    return this.datasourcesService.addRule(id, body);
+  }
+
+  @Delete('rules/:ruleId')
+  @RequirePermissions('datasources:access')
+  removeRule(@Param('ruleId') ruleId: string) {
+    this.features.assertEnabled('rows.rules');
+    return this.datasourcesService.removeRule(ruleId);
+  }
+
   @Put(':id/access')
   @RequirePermissions('datasources:access')
   setAccess(@Param('id') id: string, @Body() body: { roleIds: string[] }) {

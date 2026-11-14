@@ -6,7 +6,7 @@
  */
 
 import { Routes } from '@angular/router';
-import { authGuard, loginGuard, setupGuard } from './core/guards/auth.guard';
+import { authGuard, homeRedirect, loginGuard, setupGuard } from './core/guards/auth.guard';
 import { ShellComponent } from './core/layout/shell/shell.component';
 import { permissionGuard } from './core/guards/permission.guard';
 
@@ -18,6 +18,12 @@ export const routes: Routes = [
       import('./features/login/login.component').then((m) => m.LoginComponent),
   },
   {
+    // Wall display: outside the app shell, full screen, still signed in and checked like any dashboard.
+    path: 'tv/:id',
+    canActivate: [authGuard, permissionGuard('dashboards:read')],
+    loadComponent: () => import('./features/dashboards/tv/tv.component').then((m) => m.TvComponent),
+  },
+  {
     path: 'setup',
     canActivate: [setupGuard],
     loadComponent: () =>
@@ -27,7 +33,20 @@ export const routes: Routes = [
     path: '',
     component: ShellComponent,
     canActivate: [authGuard],
+    // Child routes re-run the guard, so a locked person cannot move between pages.
+    runGuardsAndResolvers: 'always',
+    canActivateChild: [authGuard],
     children: [
+      { path: 'home', canActivate: [homeRedirect], children: [] },
+      {
+        path: 'account',
+        loadComponent: () => import('./features/account/account.component').then((m) => m.AccountComponent),
+      },
+      {
+        path: 'd/:id',
+        canActivate: [permissionGuard('dashboards:read')],
+        loadComponent: () => import('./features/dashboards/dashboard-view.component').then((m) => m.DashboardViewComponent),
+      },
       {
         path: 'dashboards',
         loadComponent: () =>
@@ -100,7 +119,7 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/settings.component').then((m) => m.AdminSettingsComponent),
       },
       { path: 'admin', redirectTo: 'admin/users', pathMatch: 'full' },
-      { path: '', redirectTo: 'dashboards', pathMatch: 'full' },
+      { path: '', redirectTo: 'home', pathMatch: 'full' },
     ],
   },
   { path: '**', redirectTo: '' },

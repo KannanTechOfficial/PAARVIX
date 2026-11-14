@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { AdminApiService, type PermissionCatalog, type Role, errorText } from '../../core/services/admin-api.service';
+import { DashboardsApiService, type DashboardItem } from '../../core/services/dashboards-api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { IconComponent } from '../../core/ui/icon.component';
 
@@ -75,6 +76,25 @@ interface Draft { id: string | null; name: string; description: string; permissi
               </div>
             }
 
+            @if (current() && canWrite()) {
+              <fieldset class="group home">
+                <legend>{{ 'admin.roles.home' | translate }}</legend>
+                <label class="pvx-field"><span>{{ 'admin.roles.homeDashboard' | translate }}</span>
+                  <select class="pvx-select" [ngModel]="homeId()" (ngModelChange)="homeId.set($event)">
+                    <option value="">{{ 'admin.roles.homeNone' | translate }}</option>
+                    @for (d of dashboards(); track d.id) { <option [value]="d.id">{{ d.title }}</option> }
+                  </select>
+                  <small>{{ 'admin.roles.homeHint' | translate }}</small></label>
+                @if (current()!.key !== 'super_admin') {
+                  <label class="pvx-check">
+                    <input type="checkbox" [checked]="lock()" (change)="lock.set($any($event.target).checked)" [disabled]="!homeId()" />
+                    <span>{{ 'admin.roles.lock' | translate }}<br /><small>{{ 'admin.roles.lockHint' | translate }}</small></span>
+                  </label>
+                }
+                <div><button class="pvx-btn small primary" type="button" (click)="saveHome()" [disabled]="busy()">{{ 'admin.roles.saveHome' | translate }}</button></div>
+              </fieldset>
+            }
+
             @for (g of catalog()?.groups ?? []; track g.id) {
               <fieldset class="group">
                 <legend>{{ 'admin.permGroups.' + g.id | translate }}</legend>
@@ -134,6 +154,10 @@ export class RolesComponent implements OnInit {
   private readonly api = inject(AdminApiService);
   private readonly auth = inject(AuthService);
   private readonly t = inject(TranslateService);
+  private readonly dashApi = inject(DashboardsApiService);
+  readonly dashboards = signal<DashboardItem[]>([]);
+  readonly homeId = signal('');
+  readonly lock = signal(false);
 
   readonly roles = signal<Role[]>([]);
   readonly catalog = signal<PermissionCatalog | null>(null);
@@ -154,6 +178,18 @@ export class RolesComponent implements OnInit {
 
   ngOnInit() {
     this.load();
+    this.dashApi.list().subscribe({ next: (d) => this.dashboards.set(d.filter((x) => !x.template)), error: () => undefined });
+  }
+
+  /** Sets which dashboard this role opens after sign-in, and whether it may see anything else. */
+  saveHome() {
+    const r = this.current();
+    if (!r) return;
+    this.busy.set(true);
+    this.dashApi.setRoleHome(r.id, { homeDashboardId: this.homeId() || null, lockToHome: !!this.homeId() && this.lock() }).subscribe({
+      next: () => this.finish(this.t.instant('admin.roles.homeSaved', { name: r.name }), r.id),
+      error: (e) => this.fail(e),
+    });
   }
 
   private load(selectId?: string) {
@@ -179,6 +215,8 @@ export class RolesComponent implements OnInit {
 
   select(r: Role) {
     this.selectedId.set(r.id);
+    this.homeId.set(r.homeDashboardId ?? '');
+    this.lock.set(r.lockToHome);
     this.draft.set({ id: r.id, name: r.name, description: r.description, permissions: new Set(r.permissions) });
   }
 

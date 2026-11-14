@@ -9,6 +9,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
+import { SessionsModule } from './auth/sessions.module';
 import { UsersModule } from './users/users.module';
 import { DashboardsModule } from './dashboards/dashboards.module';
 import { DatasourcesModule } from './datasources/datasources.module';
@@ -17,6 +18,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { CollegeModule } from './college/college.module';
 import { TemplatesModule } from './templates/templates.module';
 import { AccessModule } from './access/access.module';
+import { QueriesModule } from './queries/queries.module';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { AccessModule } from './access/access.module';
     }),
     PrismaModule,
     AccessModule,
+    SessionsModule,
     HealthModule,
     AuthModule,
     UsersModule,
@@ -34,6 +37,7 @@ import { AccessModule } from './access/access.module';
     SettingsModule,
     CollegeModule,
     TemplatesModule,
+    QueriesModule,
   ],
 })
 export class AppModule {}

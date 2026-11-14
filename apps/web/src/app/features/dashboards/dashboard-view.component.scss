@@ -1,0 +1,108 @@
+/*
+ * Paarvix — See your data clearly.
+ * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+ * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+ * Commercial licenses: support@kannantech.com
+ */
+
+.page { max-width: 1600px; margin: 0 auto; }
+.pvx-note { margin-bottom: 16px; }
+.title-input { font-size: 20px; font-weight: 700; min-width: min(420px, 80vw); }
+.as { width: auto; min-width: 200px; }
+
+.preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: var(--pvx-radius);
+  background: var(--pvx-warn-bg);
+  color: var(--pvx-warn-text);
+  font-size: 14px;
+  font-weight: 600;
+  span { flex: 1; }
+}
+
+// ---------- read-only view ----------
+// The dashboard is the page: no frame around it, actions kept quiet.
+.icon-only { width: 40px; padding: 0; }
+.pvx-empty { padding: 64px 16px; }
+.section-list { display: flex; flex-direction: column; gap: 8px; width: min(480px, 100%); }
+.section-row { display: flex; gap: 6px; }
+
+// ---------- editor ----------
+.settings {
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  .pvx-field { width: min(600px, 100%); }
+  fieldset { border: 0; }
+  legend { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .hint { font-size: 13px; color: var(--pvx-text-muted); margin-bottom: 10px; max-width: 70ch; }
+  .role-list { display: flex; flex-wrap: wrap; gap: 10px 24px; }
+}
+
+.edit-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+.edit-layout:has(> :only-child) { grid-template-columns: 1fr; }
+@media (max-width: 1000px) { .edit-layout { grid-template-columns: 1fr; } }
+
+.canvas { min-width: 0; }
+.grid-edit {
+  display: block;
+  min-height: 520px;
+  background: var(--pvx-bg-sunken);
+  border-radius: var(--pvx-radius);
+}
+gridster-item {
+  background: transparent;
+  &.selected ::ng-deep .panel { border-color: var(--pvx-primary); border-style: solid; box-shadow: 0 0 0 2px color-mix(in srgb, var(--pvx-primary) 25%, transparent); }
+}
+.drag {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--pvx-text-muted);
+  background: var(--pvx-bg-card);
+  cursor: grab;
+  &:active { cursor: grabbing; }
+}
+
+.inspector {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 16px;
+  .ins-head { display: flex; align-items: center; justify-content: space-between; }
+  h2 { font-size: 15px; font-weight: 700; }
+  .viz { display: flex; flex-wrap: wrap; gap: 6px; }
+  .area { min-height: 120px; padding: 10px 12px; resize: vertical; }
+  .pvx-btn.danger { align-self: flex-start; }
+}
+
+// ---------- phone ----------
+// The header must never be wider than the screen: a wider page makes the phone zoom out,
+// which also pushes fixed bars such as the section tabs off the bottom.
+@media (max-width: 700px) {
+  .pvx-page-head { margin-bottom: 12px; gap: 10px; }
+  .pvx-page-head h1 { font-size: 24px; }
+  .pvx-page-head p { font-size: 14px; }
+  .pvx-page-head .actions { margin-left: 0; flex-wrap: wrap; }
+  // Previewing as someone and wall displays are laptop tasks.
+  .as, .tv { display: none; }
+}

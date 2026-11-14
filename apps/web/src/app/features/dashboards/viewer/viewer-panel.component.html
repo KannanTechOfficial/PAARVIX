@@ -1,0 +1,109 @@
+<!--
+  Paarvix — See your data clearly.
+  Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+  Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+  Commercial licenses: support@kannantech.com
+-->
+@switch (role()) {
+  @case ('note') {
+    @if (panel().title) { <h3 class="title">{{ panel().title }}</h3> }
+    <p class="note">{{ panel().viz.text }}</p>
+  }
+
+  @case ('headline') {
+    <p class="label">{{ panel().title }}</p>
+    @if (loading()) {
+      <span class="skel skel-value" aria-busy="true"></span><span class="skel skel-line"></span>
+    } @else if (error()) {
+      <p class="err" role="alert">{{ error() }}</p>
+    } @else if (headline(); as h) {
+      <p class="value pvx-num" [attr.title]="h.exact" [attr.aria-label]="h.exact">{{ displayValue() }}</p>
+      @if (h.delta !== null) {
+        <p class="delta pvx-num">
+          <span class="pill" [class]="'pill tone-' + h.tone"><pvx-icon [name]="h.delta > 0 ? 'up' : h.delta < 0 ? 'down' : 'flat'" [size]="13" />{{ h.deltaText }}</span>
+          @if (h.since) { <span class="since">{{ 'dashboards.vsPrevious' | translate: { label: h.since } }}</span> }
+        </p>
+      }
+      @if (h.spark) {
+        <svg class="spark" [class]="'spark tone-' + h.tone" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
+          <path class="spark-area" [attr.d]="h.spark.area" />
+          <path class="spark-line" [attr.d]="h.spark.line" vector-effect="non-scaling-stroke" />
+        </svg>
+      }
+    } @else {
+      <p class="value muted">—</p>
+    }
+  }
+
+  @case ('detail') {
+    <header class="head">
+      <h3 class="title">{{ panel().title }}</h3>
+      @if (result(); as r) { <span class="count pvx-num">{{ 'dashboards.rowCount' | translate: { count: r.rows.length } }}</span> }
+    </header>
+    @if (loading()) {
+      <div class="skel-table" aria-busy="true"><span></span><span></span><span></span><span></span></div>
+    } @else if (error()) {
+      <p class="err" role="alert">{{ error() }}</p>
+    } @else if (result(); as r) {
+      @if (!r.rows.length) {
+        <p class="muted">{{ 'dashboards.noRows' | translate }}</p>
+      } @else {
+        <div class="table-scroll" tabindex="0" role="region" [attr.aria-label]="panel().title">
+          <table>
+            <thead><tr>@for (f of r.fields; track f) { <th scope="col">{{ f }}</th> }</tr></thead>
+            <tbody>
+              @for (row of previewRows(); track $index) {
+                <tr>@for (f of r.fields; track f) { <td [class.num]="isNum(row[f])">{{ cell(row[f]) }}</td> }</tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (r.rows.length > previewRows().length) {
+          <button type="button" class="more" (click)="openDetail.emit({ panel: panel(), data: r })">
+            {{ 'dashboards.seeAll' | translate: { count: r.rows.length } }}
+          </button>
+        }
+      }
+    }
+  }
+
+  @default {
+    <!-- story and supporting charts -->
+    <header class="head">
+      <h3 class="title">{{ panel().title }}</h3>
+      @if (result() && layout() !== 'wall') {
+        <button type="button" class="toggle" (click)="asTable.set(!asTable())" [attr.aria-pressed]="asTable()"
+          [attr.aria-label]="(asTable() ? 'dashboards.showChart' : 'dashboards.showTable') | translate">
+          <pvx-icon [name]="asTable() ? 'chart' : 'table'" [size]="16" />
+        </button>
+      }
+    </header>
+    @if (loading()) {
+      <div class="skel skel-chart" aria-busy="true"></div>
+    } @else if (error()) {
+      <p class="err" role="alert">{{ error() }}</p>
+    } @else if (result(); as r) {
+      @if (!r.rows.length) {
+        <p class="muted">{{ 'dashboards.noRows' | translate }}</p>
+      } @else if (asTable()) {
+        <div class="table-scroll" tabindex="0" role="region" [attr.aria-label]="panel().title">
+          <table>
+            <thead><tr>@for (f of r.fields; track f) { <th scope="col">{{ f }}</th> }</tr></thead>
+            <tbody>
+              @for (row of r.rows.slice(0, 200); track $index) {
+                <tr>@for (f of r.fields; track f) { <td [class.num]="isNum(row[f])">{{ cell(row[f]) }}</td> }</tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        @if (tooMany()) { <p class="hint" role="note">{{ 'dashboards.tooManyLabels' | translate: { count: r.rows.length } }}</p> }
+        <div echarts class="chart" [options]="chart()" [autoResize]="true" role="img" [attr.aria-label]="panel().title"></div>
+      }
+    }
+  }
+}
+
+@if (result()?.offline) {
+  <p class="offline" role="status">{{ 'dashboards.offline' | translate: { time: updated() } }}</p>
+}

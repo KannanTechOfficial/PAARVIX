@@ -42,7 +42,7 @@ const SYNC_CHOICES = [0, 15, 30, 60, 360, 1440];
       </div>
 
       <label>{{ 'datasources.name' | translate }}
-        <input formControlName="name" autocomplete="off" required /></label>
+        <input formControlName="name" autocomplete="off" [attr.aria-required]="true" /></label>
 
       @switch (kind()) {
         @case ('excel') {
@@ -53,7 +53,7 @@ const SYNC_CHOICES = [0, 15, 30, 60, 360, 1440];
         }
         @case ('gsheet') {
           <label>{{ 'datasources.sheetLink' | translate }}
-            <input formControlName="link" type="url" autocomplete="off" required /></label>
+            <input formControlName="link" type="url" autocomplete="off" [attr.aria-required]="true" /></label>
           <p class="hint">{{ 'datasources.sheetHint' | translate }}</p>
           <label>{{ 'datasources.serviceKey' | translate }}
             <textarea formControlName="serviceAccount" rows="3" autocomplete="off" spellcheck="false"></textarea></label>
@@ -69,13 +69,13 @@ const SYNC_CHOICES = [0, 15, 30, 60, 360, 1440];
         @default {
           <p class="hint">{{ 'datasources.readOnlyUser' | translate }}</p>
           <label>{{ 'datasources.host' | translate }}
-            <input formControlName="host" autocomplete="off" required /></label>
+            <input formControlName="host" autocomplete="off" [attr.aria-required]="true" /></label>
           <label>{{ 'datasources.port' | translate }}
             <input formControlName="port" type="number" inputmode="numeric" /></label>
           <label>{{ 'datasources.database' | translate }}
-            <input formControlName="database" autocomplete="off" required /></label>
+            <input formControlName="database" autocomplete="off" [attr.aria-required]="true" /></label>
           <label>{{ 'datasources.user' | translate }}
-            <input formControlName="user" autocomplete="off" required /></label>
+            <input formControlName="user" autocomplete="off" [attr.aria-required]="true" /></label>
           <label>{{ 'datasources.password' | translate }}
             <input formControlName="password" type="password" autocomplete="new-password" /></label>
           <label class="check"><input formControlName="ssl" type="checkbox" /> {{ 'datasources.ssl' | translate }}</label>
@@ -92,17 +92,38 @@ const SYNC_CHOICES = [0, 15, 30, 60, 360, 1440];
     </form>
   `,
   styles: [`
-    .card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; max-width: 480px; padding: clamp(12px, 3vw, 24px); margin-bottom: 16px; background: var(--pvx-bg-card); border-radius: var(--pvx-radius); }
-    label { display: grid; gap: 4px; }
-    .check { display: flex; gap: 8px; align-items: center; }
-    input:not([type='checkbox']), select, textarea { width: 100%; min-height: 44px; padding: 8px; border: 1px solid var(--pvx-border); border-radius: var(--pvx-radius); background: var(--pvx-bg); color: inherit; font: inherit; max-width: 100%; }
-    .hint { color: var(--pvx-text-muted); font-size: 0.875rem; }
-    .err { color: var(--pvx-danger); overflow-wrap: anywhere; }
-    .kinds { display: flex; gap: 8px; flex-wrap: wrap; }
-    button { min-height: 44px; padding: 0 16px; border: 1px solid var(--pvx-border); border-radius: var(--pvx-radius); background: transparent; color: inherit; cursor: pointer; }
-    .kinds button[aria-pressed='true'], .primary { background: var(--pvx-primary); color: #fff; border-color: var(--pvx-primary); }
+    .card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: 520px; padding: clamp(16px, 3vw, 26px); margin-bottom: 16px;
+      background: var(--pvx-bg-card); border-radius: var(--pvx-radius-lg); box-shadow: var(--pvx-shadow-sm); }
+    h2, h3 { font: 600 18px var(--pvx-font-brand); letter-spacing: -0.015em; }
+    label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--pvx-text); }
+    .check { display: flex; gap: 10px; align-items: center; font-weight: 500; }
+    .check input { width: 18px; height: 18px; accent-color: var(--pvx-primary); }
+    input:not([type='checkbox']):not([type='file']), select, textarea {
+      width: 100%; min-height: 42px; padding: 0 12px; border: 1px solid var(--pvx-border-strong); border-radius: var(--pvx-radius);
+      background: var(--pvx-bg-raised); color: var(--pvx-text); font: 400 14px var(--pvx-font-ui); max-width: 100%;
+      box-shadow: inset 0 1px 1px rgba(12, 18, 32, 0.03); transition: border-color 140ms ease-out, box-shadow 140ms ease-out;
+    }
+    textarea { padding: 10px 12px; min-height: 96px; font-family: var(--pvx-font-code); font-size: 13px; }
+    input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; border-color: var(--pvx-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pvx-primary) 22%, transparent); }
+    /* The file picker in the app's own style, not the browser's grey button. */
+    input[type='file'] { font: 400 14px var(--pvx-font-ui); color: var(--pvx-text-muted); padding: 6px; border: 1px dashed var(--pvx-border-strong);
+      border-radius: var(--pvx-radius); background: var(--pvx-bg-sunken); width: 100%; cursor: pointer; }
+    input[type='file']::file-selector-button { margin-right: 12px; min-height: 34px; padding: 0 14px; border: 0; border-radius: calc(var(--pvx-radius) - 2px);
+      background: var(--pvx-bg-raised); color: var(--pvx-text); font: 600 13px var(--pvx-font-ui); box-shadow: var(--pvx-shadow-sm); cursor: pointer; }
+    .hint { color: var(--pvx-text-muted); font-size: 13px; font-weight: 400; line-height: 1.5; }
+    .err { color: var(--pvx-danger); overflow-wrap: anywhere; font-size: 14px; }
+    /* Source types as a segmented choice. */
+    .kinds { display: flex; gap: 2px; flex-wrap: wrap; padding: 3px; border-radius: 12px; background: var(--pvx-bg-sunken); width: fit-content; max-width: 100%; }
+    .kinds button { min-height: 34px; padding: 0 14px; border: 0; border-radius: 9px; background: transparent; color: var(--pvx-text-muted); font: 500 13.5px var(--pvx-font-ui); box-shadow: none; }
+    .kinds button:hover { color: var(--pvx-text); }
+    .kinds button[aria-pressed='true'] { background: var(--pvx-bg-card); color: var(--pvx-text); font-weight: 600; box-shadow: var(--pvx-shadow-sm); }
+    button { min-height: 42px; padding: 0 16px; border: 1px solid var(--pvx-border-strong); border-radius: var(--pvx-radius); background: var(--pvx-bg-raised);
+      color: var(--pvx-text); font: 600 14px var(--pvx-font-ui); cursor: pointer; transition: transform 120ms ease-out; }
+    button:active:not(:disabled) { transform: scale(.97); }
+    .primary { background: var(--pvx-primary); color: var(--pvx-on-primary); border-color: transparent;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 1px 2px rgba(12, 18, 32, 0.15); }
     button:disabled { opacity: 0.6; cursor: wait; }
-    progress { width: 100%; }
+    progress { width: 100%; accent-color: var(--pvx-primary); }
   `],
 })
 export class SourceFormComponent {
@@ -145,8 +166,8 @@ export class SourceFormComponent {
     this.form.controls.serviceAccount.reset();
     if (k === 'mysql' || k === 'postgres') this.form.controls.port.setValue(k === 'mysql' ? 3306 : 5432);
     for (const [key, ctl] of Object.entries(this.form.controls)) {
-      if (REQUIRED[k].includes(key)) ctl.addValidators(Validators.required);
-      else ctl.removeValidators(Validators.required);
+      // Replace, not add: rules left from another source type must never block this one.
+      ctl.setValidators(REQUIRED[k].includes(key) ? Validators.required : null);
       ctl.updateValueAndValidity({ emitEvent: false });
     }
   }

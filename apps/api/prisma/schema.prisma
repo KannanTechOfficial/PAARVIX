@@ -28,15 +28,22 @@ model User {
   avatarUrl    String?     @map("avatar_url")
   language     String      @default("en")
   department   String?
-  /// Raised when a password is reset or the account is deactivated, so older sessions stop renewing.
+  /// Raised when a password is reset or the account is deactivated. Sessions themselves are ended in the sessions table.
   sessionVersion Int       @default(0) @map("session_version")
+  /// Values row rules compare against, e.g. {"reg_no": "912625104001"}. Email and department are added automatically.
+  attributes   Json        @default("{}")
+  /// Overrides the role's home dashboard for this one person.
+  homeDashboardId String?  @map("home_dashboard_id")
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
 
   assignedRole Role?       @relation(fields: [roleId], references: [id])
+  homeDashboard Dashboard? @relation("UserHome", fields: [homeDashboardId], references: [id], onDelete: SetNull)
+  queryRuns    QueryRun[]
   dashboards   Dashboard[]
   datasources  Datasource[]
   queries      Query[]
+  sessions     Session[]
 
   @@map("users")
 }
@@ -49,11 +56,18 @@ model Role {
   description String   @default("")
   permissions String[]
   isSystem    Boolean  @default(false) @map("is_system")
+  /// Dashboard this role opens after sign-in.
+  homeDashboardId String? @map("home_dashboard_id")
+  /// When true, people in this role see only their home dashboard: no menu, no other pages.
+  lockToHome  Boolean  @default(false) @map("lock_to_home")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   users       User[]
+  homeDashboard Dashboard? @relation("RoleHome", fields: [homeDashboardId], references: [id], onDelete: SetNull)
   datasources DatasourceAccess[]
+  dashboards  DashboardRole[]
+  rowRules    RowRule[]
 
   @@map("roles")
 }
@@ -77,13 +91,29 @@ model Dashboard {
   config      Json     @default("{}")
   isPublic    Boolean  @default(false) @map("is_public")
   shareToken  String?  @unique @map("share_token")
+  /// Raised on every save; a save made from an older version is refused, so edits are never silently lost.
+  version     Int      @default(1)
   createdBy   String   @map("created_by")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   creator     User     @relation(fields: [createdBy], references: [id])
+  viewers     DashboardRole[]
+  homeOfRoles Role[]   @relation("RoleHome")
+  homeOfUsers User[]   @relation("UserHome")
 
   @@map("dashboards")
+}
+
+/// Roles that may view a built dashboard. Anyone with dashboards:write sees every dashboard.
+model DashboardRole {
+  dashboardId String    @map("dashboard_id")
+  roleId      String    @map("role_id")
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  role        Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([dashboardId, roleId])
+  @@map("dashboard_roles")
 }
 
 model Datasource {
@@ -100,6 +130,8 @@ model Datasource {
   queries     Query[]
   dataTables  DataTable[]
   access      DatasourceAccess[]
+  queryRuns   QueryRun[]
+  rowRules    RowRule[]
 
   @@map("datasources")
 }
@@ -119,11 +151,17 @@ model DataTable {
   @@map("data_tables")
 }
 
+/// A saved query. Private to its owner unless visibility is "shared".
 model Query {
   id           String     @id @default(cuid())
   name         String
+  description  String     @default("")
+  /// "builder" runs querySpec; "sql" runs sql.
+  kind         String     @default("builder")
   datasourceId String     @map("datasource_id")
   querySpec    Json       @map("query_spec")
+  sql          String?
+  visibility   String     @default("private")
   createdBy    String     @map("created_by")
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
@@ -131,7 +169,28 @@ model Query {
   datasource   Datasource @relation(fields: [datasourceId], references: [id])
   creator      User       @relation(fields: [createdBy], references: [id])
 
+  @@index([createdBy])
   @@map("queries")
+}
+
+/// Each person's recent runs. Holds the query, never its result rows. Trimmed to the newest 50 per person.
+model QueryRun {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  datasourceId String   @map("datasource_id")
+  kind         String
+  querySpec    Json?    @map("query_spec")
+  sql          String?
+  rowCount     Int      @map("row_count")
+  durationMs   Int      @map("duration_ms")
+  error        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  datasource   Datasource @relation(fields: [datasourceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("query_runs")
 }
 
 model Setting {
@@ -152,4 +211,50 @@ model Template {
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("templates")
+}
+
+/// For people in roleId, every query on datasourceId keeps only rows where column equals the person's attribute.
+/// Applied on the server to dashboards, queries and previews alike. A table without the column is refused, never shown in full.
+model RowRule {
+  id           String     @id @default(cuid())
+  datasourceId String     @map("datasource_id")
+  roleId       String     @map("role_id")
+  column       String
+  attribute    String
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  datasource   Datasource @relation(fields: [datasourceId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([datasourceId, roleId, column])
+  @@map("row_rules")
+}
+
+/// One signed-in browser or device. Ending it on the server signs that device out, even if its cookie was copied.
+model Session {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  /// SHA-256 of the refresh token's current one-time id. The token itself is never stored.
+  tokenHash     String    @map("token_hash")
+  /// The id just replaced, accepted for a few seconds so two tabs renewing at once do not sign each other out.
+  previousHash  String?   @map("previous_hash")
+  previousUntil DateTime? @map("previous_until")
+  /// How the person signed in: password, google or setup.
+  method        String    @default("password")
+  userAgent     String?   @map("user_agent")
+  ip            String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  lastUsedAt    DateTime  @default(now()) @map("last_used_at")
+  /// Idle limit: moves forward each time the session renews.
+  expiresAt     DateTime  @map("expires_at")
+  /// Absolute limit: never moves, so no session lives forever.
+  maxExpiresAt  DateTime  @map("max_expires_at")
+  revokedAt     DateTime? @map("revoked_at")
+  /// signed_out, signed_out_elsewhere, password_reset, deactivated, admin, reuse, limit
+  revokedReason String?   @map("revoked_reason")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
 }

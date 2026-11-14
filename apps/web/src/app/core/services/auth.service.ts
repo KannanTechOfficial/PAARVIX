@@ -9,6 +9,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, catchError, finalize, map, of, shareReplay, switchMap, tap } from 'rxjs';
+import { clearPanelCache } from './panel-data.service';
 
 export interface User {
   id: string;
@@ -21,6 +22,9 @@ export interface User {
   roleName: string;
   permissions: string[];
   isSuperAdmin: boolean;
+  homeDashboardId: string | null;
+  /** Sees only the home dashboard: no menu, no other pages. */
+  locked: boolean;
 }
 
 interface AuthResponse {
@@ -30,8 +34,8 @@ interface AuthResponse {
 
 /** Only same-app paths, so a crafted ?returnUrl= can never send someone to another site. */
 export function safeReturnUrl(value: string | null | undefined): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return '/dashboards';
-  if (value.startsWith('/login') || value.startsWith('/setup')) return '/dashboards';
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return '/home';
+  if (value.startsWith('/login') || value.startsWith('/setup')) return '/home';
   return value;
 }
 
@@ -45,6 +49,10 @@ export class AuthService {
   private readonly _token = signal<string | null>(null);
   private loadingUser: Observable<User | null> | null = null;
   private renewing: Observable<string | null> | null = null;
+  /** Set while sign-out is in progress, so nothing renews the session behind its back. */
+  private signingOut: Observable<unknown> | null = null;
+  /** Changes on every sign-in or sign-out; a renewal that started before it is ignored when it lands. */
+  private generation = 0;
 
   readonly user = this._user.asReadonly();
   readonly isLoggedIn = computed(() => !!this._token());
@@ -77,8 +85,13 @@ export class AuthService {
    * one renewal, so they do not race each other. Resolves to null when the session is over.
    */
   renewToken(): Observable<string | null> {
+    if (this.signingOut) return of(null);
+    const gen = this.generation;
     this.renewing ??= this.http.post<AuthResponse>(`${this.apiUrl}/refresh`, {}).pipe(
-      tap((res) => this.handleAuth(res)),
+      tap((res) => {
+        if (gen !== this.generation) throw new Error('signed out meanwhile');
+        this.handleAuth(res);
+      }),
       map((res) => res.accessToken),
       catchError(() => of(null)),
       finalize(() => (this.renewing = null)),
@@ -93,6 +106,7 @@ export class AuthService {
    */
   ensureUser(): Observable<User | null> {
     if (this._user()) return of(this._user());
+    if (this.signingOut) return this.signingOut.pipe(map(() => null));
     // No token in memory after a reload: renewToken() below restores it from the cookie.
     this.loadingUser ??= (this._token() ? this.fetchMe() : of(null)).pipe(
       switchMap((u) => (u ? of(u) : this.renewToken().pipe(switchMap((t) => (t ? this.fetchMe() : of(null)))))),
@@ -133,6 +147,7 @@ export class AuthService {
   }
 
   login(email: string, password: string) {
+    this.generation++;
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email: email.trim(), password }).pipe(
       tap((res) => this.handleAuth(res)),
     );
@@ -140,14 +155,30 @@ export class AuthService {
 
   /** Forgets the session in this tab without calling the API. */
   clearSession() {
+    this.generation++;
     this._token.set(null);
     this._user.set(null);
+    this.loadingUser = null;
+    void clearPanelCache(); // panel data kept for offline use belongs to this person only
   }
 
+  /**
+   * Signs out, then opens the login page. The login page must wait for the server to delete the
+   * refresh cookie: if it opened first, it would find the cookie still there and sign straight back in.
+   * A renewal already on its way is allowed to finish first, so its new cookie cannot land after the delete.
+   */
   logout() {
-    this.http.post(`${this.apiUrl}/logout`, {}).subscribe({ error: () => undefined });
+    if (this.signingOut) return;
+    const inFlight = this.renewing ?? of(null);
     this.clearSession();
-    this.router.navigate(['/login']);
+    this.signingOut = inFlight.pipe(
+      catchError(() => of(null)),
+      switchMap(() => this.http.post(`${this.apiUrl}/logout`, {})),
+      catchError(() => of(null)),
+      finalize(() => (this.signingOut = null)),
+      shareReplay(1),
+    );
+    this.signingOut.subscribe(() => void this.router.navigate(['/login']));
   }
 
   /** Session ended by the server: back to login, remembering where the person was. */

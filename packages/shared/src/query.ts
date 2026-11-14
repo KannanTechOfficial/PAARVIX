@@ -21,6 +21,8 @@ export interface SecurityContext {
   /** Role key, e.g. "editor" or a custom role. */
   role: string;
   permissions: string[];
+  /** The person's attributes (email, department, reg_no, ...), which row rules compare columns against. */
+  attributes?: Record<string, string>;
   tenantId: string | null;
   rowFilters: Filter[]; // always ANDed in; empty until RLS (P2 Pro)
 }

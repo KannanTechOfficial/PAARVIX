@@ -8,7 +8,7 @@
 import { SUPER_ADMIN } from '@paarvix/shared';
 import { type AuthUser, can } from '../access/auth-user';
 import { BadRequestException, ForbiddenException, HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import type { QuerySpec, SecurityContext } from '@paarvix/shared';
+import type { Filter, QuerySpec, SecurityContext } from '@paarvix/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConnectorRegistry } from './connectors/connector-registry';
 import type { LoadedDatasource } from './connectors/connector';
@@ -84,6 +84,37 @@ export class DatasourcesService {
       where: { datasourceId_roleId: { datasourceId: id, roleId: user.roleId } },
     });
     if (!grant) throw new NotFoundException(`Datasource ${id} not found`);
+  }
+
+  // ---------- row rules ----------
+  listRules() {
+    return this.prisma.rowRule.findMany({
+      orderBy: { createdAt: 'asc' },
+      include: { datasource: { select: { name: true } }, role: { select: { name: true, key: true } } },
+    });
+  }
+
+  async addRule(id: string, input: { roleId?: string; column?: string; attribute?: string }) {
+    const column = String(input?.column ?? '').trim();
+    const attribute = String(input?.attribute ?? '').trim();
+    if (!column || column.length > 100) throw new BadRequestException('Choose a column');
+    if (!/^[a-z][a-z0-9_]{0,39}$/.test(attribute)) throw new BadRequestException('Attribute names use lower-case letters, digits and _');
+    if (!(await this.prisma.datasource.findUnique({ where: { id } }))) throw new NotFoundException(`Datasource ${id} not found`);
+    const role = await this.prisma.role.findUnique({ where: { id: String(input.roleId ?? '') } });
+    if (!role) throw new BadRequestException('Choose a role');
+    if (role.key === SUPER_ADMIN) throw new BadRequestException('Super Admin always sees every row');
+    return this.prisma.rowRule.upsert({
+      where: { datasourceId_roleId_column: { datasourceId: id, roleId: role.id, column } },
+      update: { attribute },
+      create: { datasourceId: id, roleId: role.id, column, attribute },
+    });
+  }
+
+  async removeRule(ruleId: string) {
+    await this.prisma.rowRule.delete({ where: { id: ruleId } }).catch(() => {
+      throw new NotFoundException('Rule not found');
+    });
+    return { removed: ruleId };
   }
 
   /** Every source with the roles allowed to query it. */
@@ -209,15 +240,38 @@ export class DatasourcesService {
     return this.registry.get(ds.type).discoverSchema(ds);
   }
 
+  /**
+   * The row rules for this person's role on this source, as filters. Fails closed:
+   * a rule whose attribute the person lacks refuses the query instead of dropping the rule.
+   */
+  async rowRulesFor(id: string, ctx: SecurityContext): Promise<{ column: string; filter: Filter }[]> {
+    const rules = await this.prisma.rowRule.findMany({ where: { datasourceId: id, role: { key: ctx.role } } });
+    return rules.map((r) => {
+      const value = ctx.attributes?.[r.attribute];
+      if (value === undefined || value === null || String(value).trim() === '') {
+        throw new ForbiddenException(`Your account has no "${r.attribute}" set, so this data cannot be shown. Ask an administrator.`);
+      }
+      return { column: r.column, filter: { column: r.column, op: 'eq', value: String(value) } as Filter };
+    });
+  }
+
   async data(id: string, spec: QuerySpec, ctx: SecurityContext) {
     assertSpecShape(spec);
     const ds = await this.load(id);
-    return this.registry.get(ds.type).query(ds, spec, ctx);
+    const connector = this.registry.get(ds.type);
+    const rules = await this.rowRulesFor(id, ctx);
+    if (rules.length) {
+      // A table without the rule's column could only be shown in full, so it is refused.
+      const table = (await connector.discoverSchema(ds)).find((t) => t.name === spec.table);
+      const missing = rules.find((r) => !table?.columns.some((c) => c.name === r.column));
+      if (missing) throw new ForbiddenException('This table is not available to you');
+    }
+    return connector.query(ds, spec, { ...ctx, rowFilters: [...ctx.rowFilters, ...rules.map((r) => r.filter)] });
   }
 
   async query(id: string, sql: string, values: unknown[], ctx: SecurityContext) {
     // Raw SQL cannot be filtered, so refuse it rather than skip the filters.
-    if (ctx.rowFilters.length) {
+    if (ctx.rowFilters.length || (await this.rowRulesFor(id, ctx)).length) {
       throw new ForbiddenException('Raw SQL is not available with row filters');
     }
     const ds = await this.load(id);

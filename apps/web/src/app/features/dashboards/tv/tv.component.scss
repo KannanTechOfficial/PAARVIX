@@ -1,0 +1,86 @@
+/*
+ * Paarvix — See your data clearly.
+ * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+ * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+ * Commercial licenses: support@kannantech.com
+ */
+
+// A wall screen is dark: it sits in a lit room and should not glare. Its tokens are set here, not by the theme toggle.
+:host {
+  --pvx-bg: #070D1C;
+  --pvx-bg-card: #0B1427;
+  --pvx-bg-sunken: #13203A;
+  --pvx-text: #F1F5F9;
+  --pvx-text-muted: #9FB0C8;
+  --pvx-border: #1E2B45;
+  --pvx-border-strong: #2B3A58;
+  --pvx-primary: #7EA2F2;
+  --pvx-link: #9DB8F5;
+  --pvx-danger: #FCA5A5;
+  --pvx-warn-text: #FDBA74;
+  --pvx-warn-bg: rgba(249, 115, 22, .14);
+  display: block;
+  min-height: 100dvh;
+  background: radial-gradient(120% 80% at 0% 0%, #0E1B3A 0%, var(--pvx-bg) 55%) fixed;
+  color: var(--pvx-text);
+}
+:host(.idle) { cursor: none; }
+
+.tv {
+  position: relative;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 3vh, 56px) clamp(32px, 3.5vw, 80px) clamp(28px, 4vh, 64px);
+  gap: clamp(20px, 3vh, 48px);
+}
+
+.top { display: flex; align-items: flex-end; gap: 40px; }
+.ident { flex: 1; min-width: 0; }
+.org { display: block; font: 600 24px var(--pvx-font-brand); color: var(--pvx-text-muted); letter-spacing: .01em; }
+h1 { font: 700 clamp(36px, 3.2vw, 64px)/1.1 var(--pvx-font-brand); letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.section {
+  font: 600 clamp(28px, 2.2vw, 44px) var(--pvx-font-ui); color: #2DD4BF;
+  padding-bottom: 6px;
+}
+.meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.clock { font: 600 clamp(40px, 3.4vw, 72px)/1 var(--pvx-font-ui); letter-spacing: -0.02em; }
+.data-time { font-size: 24px; color: var(--pvx-text-muted); }
+
+.stale {
+  align-self: flex-start;
+  font: 600 28px var(--pvx-font-ui); color: var(--pvx-warn-text);
+  background: var(--pvx-warn-bg); padding: 10px 20px; border-radius: 12px;
+}
+.message { margin: auto; font-size: 36px; color: var(--pvx-text-muted); }
+
+.screen { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: clamp(24px, 4vh, 64px); }
+.headlines {
+  display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  > * + * { padding-left: clamp(24px, 2.5vw, 56px); border-left: 2px solid var(--pvx-border); }
+}
+.screen.no-charts .headlines { margin: auto 0; }
+.charts {
+  flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(var(--n, 1), minmax(0, 1fr)); gap: clamp(32px, 4vw, 96px);
+  > * { min-height: 0; }
+}
+
+.progress { height: 4px; border-radius: 2px; background: var(--pvx-border); overflow: hidden; }
+.progress span { display: block; height: 100%; background: #2DD4BF; transform-origin: left; transition: transform 250ms linear; }
+.dots { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 10px; list-style: none; }
+.dots li { width: 10px; height: 10px; border-radius: 50%; background: var(--pvx-border-strong); }
+.dots li.on { background: #2DD4BF; }
+
+.controls {
+  position: fixed; right: 32px; bottom: 32px; display: flex; gap: 12px; align-items: center;
+  transition: opacity 400ms ease-out;
+  button, a {
+    display: inline-flex; align-items: center; min-height: 56px; padding: 0 22px; border-radius: 14px; border: 0;
+    background: rgba(148, 163, 184, .16); color: var(--pvx-text); font: 600 20px var(--pvx-font-ui); text-decoration: none; cursor: pointer;
+    &:hover { background: rgba(148, 163, 184, .28); }
+  }
+  .next pvx-icon { transform: scaleX(-1); }
+}
+:host(.idle) .controls { opacity: 0; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) { .progress span, .controls { transition: none; } }

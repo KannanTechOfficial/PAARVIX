@@ -15,7 +15,24 @@ export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   return auth.ensureUser().pipe(
-    map((user) => (user ? true : router.createUrlTree(['/login'], { queryParams: { returnUrl: safeReturnUrl(state.url) } }))),
+    map((user) => {
+      if (!user) return router.createUrlTree(['/login'], { queryParams: { returnUrl: safeReturnUrl(state.url) } });
+      // Someone limited to one dashboard is always taken back to it. The API refuses everything else too.
+      // Their own account page stays open to them, so they can sign out a lost device.
+      if (user.locked && user.homeDashboardId && !state.url.startsWith(`/d/${user.homeDashboardId}`) && !state.url.startsWith('/account')) {
+        return router.createUrlTree(['/d', user.homeDashboardId]);
+      }
+      return true;
+    }),
+  );
+};
+
+/** "/home": the person's home dashboard when one is set, otherwise the dashboard list. */
+export const homeRedirect: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  return auth.ensureUser().pipe(
+    map((user) => (user?.homeDashboardId ? router.createUrlTree(['/d', user.homeDashboardId]) : router.createUrlTree(['/dashboards']))),
   );
 };
 

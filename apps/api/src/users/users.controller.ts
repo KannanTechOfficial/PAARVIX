@@ -5,7 +5,7 @@
  * Commercial licenses: support@kannantech.com
  */
 
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { type CreateUserInput, type UpdateUserInput, UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { PermissionsGuard, RequirePermissions } from '../access/permissions.guard';
@@ -44,5 +44,18 @@ export class UsersController {
   @RequirePermissions('users:write')
   setPassword(@Param('id') id: string, @Body() body: { password: string }, @CurrentUser() user: AuthUser) {
     return this.usersService.setPassword(id, body?.password, user);
+  }
+
+  @Get(':id/sessions')
+  @RequirePermissions('users:read')
+  sessions(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.usersService.listSessions(id, user);
+  }
+
+  @Post(':id/sessions/revoke')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('users:write')
+  revokeSessions(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.usersService.revokeSessions(id, user);
   }
 }

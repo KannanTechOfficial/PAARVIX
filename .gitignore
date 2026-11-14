@@ -59,3 +59,6 @@ client_secret*.json
 
 # Logs written by ./dev.sh
 .dev-logs/
+
+# Monaco is copied here from node_modules by apps/web/scripts/copy-monaco.mjs
+apps/web/public/assets/monaco/

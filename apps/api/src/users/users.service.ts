@@ -10,6 +10,7 @@ import * as argon2 from 'argon2';
 import { SUPER_ADMIN } from '@paarvix/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import type { AuthUser } from '../access/auth-user';
+import { SessionsService } from '../auth/sessions.service';
 
 export interface CreateUserInput {
   name: string;
@@ -26,6 +27,8 @@ export interface UpdateUserInput {
   isActive?: boolean;
   language?: string;
   department?: string | null;
+  homeDashboardId?: string | null;
+  attributes?: Record<string, string>;
 }
 
 const PUBLIC_FIELDS = {
@@ -35,6 +38,8 @@ const PUBLIC_FIELDS = {
   isActive: true,
   language: true,
   department: true,
+  homeDashboardId: true,
+  attributes: true,
   createdAt: true,
   assignedRole: { select: { id: true, key: true, name: true } },
 } as const;
@@ -45,7 +50,10 @@ const MIN_PASSWORD = 8;
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly sessions: SessionsService,
+  ) {}
 
   findAll() {
     return this.prisma.user.findMany({ select: PUBLIC_FIELDS, orderBy: { createdAt: 'asc' } });
@@ -89,6 +97,22 @@ export class UsersService {
     return v;
   }
 
+  /** Short key=value pairs for row rules. email and department come from the profile, so they are not stored here. */
+  private attributes(value: unknown): Record<string, string> {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new BadRequestException('Attributes must be name and value pairs');
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (entries.length > 20) throw new BadRequestException('At most 20 attributes');
+    const out: Record<string, string> = {};
+    for (const [k, v] of entries) {
+      if (!/^[a-z][a-z0-9_]{0,39}$/.test(k)) throw new BadRequestException(`"${k.slice(0, 40)}" is not a valid attribute name: use lower-case letters, digits and _`);
+      if (k === 'email' || k === 'department') throw new BadRequestException(`${k} comes from the profile and cannot be set here`);
+      const val = String(v ?? '').trim();
+      if (val.length > 200) throw new BadRequestException(`The value of ${k} is too long`);
+      if (val) out[k] = val;
+    }
+    return out;
+  }
+
   private department(value: unknown): string | null {
     if (value === null || value === undefined || value === '') return null;
     return this.text(value, 'Department', 1, 80);
@@ -127,6 +151,19 @@ export class UsersService {
     if (input.name !== undefined) data.name = this.text(input.name, 'Name', 2, 100);
     if (input.language !== undefined) data.language = this.language(input.language);
     if (input.department !== undefined) data.department = this.department(input.department);
+    if (input.attributes !== undefined) data.attributes = this.attributes(input.attributes);
+    if (input.homeDashboardId !== undefined) {
+      const home = input.homeDashboardId ? String(input.homeDashboardId) : null;
+      if (home) {
+        const d = await this.prisma.dashboard.findUnique({ where: { id: home }, include: { viewers: true } });
+        if (!d) throw new BadRequestException('Dashboard not found');
+        const roleId = (input.roleId as string | undefined) ?? current.roleId;
+        if (!d.viewers.some((v) => v.roleId === roleId) && currentKey !== SUPER_ADMIN) {
+          throw new BadRequestException("This person's role cannot view that dashboard. Give the role access to it first.");
+        }
+      }
+      data.homeDashboardId = home;
+    }
 
     let leavesSuperAdmin = false;
     if (input.roleId !== undefined && input.roleId !== current.roleId) {
@@ -143,7 +180,10 @@ export class UsersService {
     }
     if (leavesSuperAdmin) await this.assertNotLastSuperAdmin(id);
 
-    return this.prisma.user.update({ where: { id }, data, select: PUBLIC_FIELDS });
+    const updated = await this.prisma.user.update({ where: { id }, data, select: PUBLIC_FIELDS });
+    // A deactivated person is signed out on every device at once, not when their tokens expire.
+    if (data.isActive === false) await this.sessions.revokeAll(id, 'deactivated');
+    return updated;
   }
 
   async setPassword(id: string, password: string, actor: AuthUser) {
@@ -155,9 +195,30 @@ export class UsersService {
     }
     await this.prisma.user.update({
       where: { id },
-      // Raising the session version signs them out everywhere they were signed in.
       data: { passwordHash: await argon2.hash(password, { type: argon2.argon2id }), sessionVersion: { increment: 1 } },
     });
+    // A new password signs them out everywhere. Someone resetting their own keeps the device they are on.
+    await this.sessions.revokeAll(id, 'password_reset', id === actor.id ? actor.sessionId : undefined);
     return { updated: id };
+  }
+
+  /** The devices a person is signed in on, for an administrator. */
+  async listSessions(id: string, actor: AuthUser) {
+    await this.touchable(id, actor);
+    return this.sessions.listActive(id);
+  }
+
+  /** Signs a person out on every device. Used when a laptop or phone is lost, or someone leaves. */
+  async revokeSessions(id: string, actor: AuthUser) {
+    await this.touchable(id, actor);
+    // An admin signing themselves out everywhere keeps the device they are using.
+    const ended = await this.sessions.revokeAll(id, 'admin', id === actor.id ? actor.sessionId : undefined);
+    return { ended };
+  }
+
+  private async touchable(id: string, actor: AuthUser) {
+    const current = await this.prisma.user.findUnique({ where: { id }, include: { assignedRole: true } });
+    if (!current) throw new NotFoundException('User not found');
+    this.assertMayTouch(actor, current.assignedRole?.key ?? '');
   }
 }

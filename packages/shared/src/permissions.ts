@@ -19,6 +19,7 @@ export const PERMISSIONS = {
   'datasources:query': 'Run queries and preview rows',
   'datasources:write': 'Add, update and remove data sources',
   'datasources:access': 'Choose which roles can use each data source',
+  'queries:write': 'Save and share queries',
   'college:analytics': 'View college analytics',
   'college:students': 'View any student record',
   'users:read': 'See users',
@@ -37,7 +38,7 @@ export const ALL_PERMISSIONS = Object.keys(PERMISSIONS) as Permission[];
 /** Groups for the role editor, in display order. */
 export const PERMISSION_GROUPS: { id: string; label: string; permissions: Permission[] }[] = [
   { id: 'workspace', label: 'Dashboards', permissions: ['dashboards:read', 'dashboards:write', 'dashboards:delete', 'templates:apply'] },
-  { id: 'data', label: 'Data', permissions: ['datasources:read', 'datasources:query', 'datasources:write', 'datasources:access'] },
+  { id: 'data', label: 'Data', permissions: ['datasources:read', 'datasources:query', 'queries:write', 'datasources:write', 'datasources:access'] },
   { id: 'college', label: 'College', permissions: ['college:analytics', 'college:students'] },
   { id: 'admin', label: 'Administration', permissions: ['users:read', 'users:write', 'roles:read', 'roles:write', 'settings:write', 'theme:write', 'plugins:read'] },
 ];
@@ -69,13 +70,13 @@ export const BUILT_IN_ROLES: BuiltInRole[] = [
     key: 'editor',
     name: 'Editor',
     description: 'Builds dashboards and queries the data sources they are given.',
-    permissions: ['dashboards:read', 'dashboards:write', 'dashboards:delete', 'datasources:read', 'datasources:query', 'college:analytics', 'college:students'],
+    permissions: ['dashboards:read', 'dashboards:write', 'dashboards:delete', 'datasources:read', 'datasources:query', 'queries:write', 'college:analytics', 'college:students'],
   },
   {
     key: 'analyst',
     name: 'Analyst',
     description: 'Explores and queries the data sources they are given. Does not edit dashboards.',
-    permissions: ['dashboards:read', 'datasources:read', 'datasources:query', 'college:analytics'],
+    permissions: ['dashboards:read', 'datasources:read', 'datasources:query', 'queries:write', 'college:analytics'],
   },
   {
     key: 'viewer',
@@ -101,6 +102,7 @@ export const GATED_FEATURES = {
   'roles.custom': 'Create and edit custom roles',
   'datasources.access': 'Per-data-source access by role',
   'theme.custom': 'Custom theme',
+  'rows.rules': 'Row rules: each person sees only their own rows',
 } as const;
 
 export type GatedFeature = keyof typeof GATED_FEATURES;

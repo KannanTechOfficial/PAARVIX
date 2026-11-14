@@ -16,6 +16,8 @@ import {
   UseGuards,
   Query,
   Req,
+  Delete,
+  Param,
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { AuthService } from './auth.service';
@@ -24,22 +26,45 @@ import { SetupDto } from './dto/setup.dto';
 import { JwtAuthGuard } from './auth.guard';
 import { GoogleService, GoogleSignInError } from './google.service';
 import { type AuthUser, CurrentUser } from '../access/auth-user';
+import { SessionsService, type SessionMeta } from './sessions.service';
+
+/**
+ * The refresh cookie is sent to /api/auth/* only (refresh, logout), never to data routes.
+ * Older versions used /api/auth/refresh; that cookie is cleared wherever a new one is set,
+ * because a browser would otherwise send both and the narrower, stale one first.
+ */
+const REFRESH_COOKIE = 'refresh_token';
+const COOKIE_PATH = '/api/auth';
+const LEGACY_COOKIE_PATH = '/api/auth/refresh';
+
+const cookieOf = (req: FastifyRequest) => (req as { cookies?: Record<string, string> }).cookies?.[REFRESH_COOKIE];
+const metaOf = (req: FastifyRequest): SessionMeta => ({
+  ip: req.ip,
+  userAgent: typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+});
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly google: GoogleService,
+    private readonly sessions: SessionsService,
   ) {}
 
   private setRefreshCookie(res: FastifyReply, token: string) {
-    res.setCookie('refresh_token', token, {
+    res.clearCookie(REFRESH_COOKIE, { path: LEGACY_COOKIE_PATH });
+    res.setCookie(REFRESH_COOKIE, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      path: '/api/auth/refresh',
-      maxAge: 7 * 24 * 60 * 60,
+      path: COOKIE_PATH,
+      maxAge: Math.floor(this.sessions.maxMs / 1000),
     });
+  }
+
+  private clearRefreshCookie(res: FastifyReply) {
+    res.clearCookie(REFRESH_COOKIE, { path: COOKIE_PATH });
+    res.clearCookie(REFRESH_COOKIE, { path: LEGACY_COOKIE_PATH });
   }
 
   @Get('google')
@@ -70,7 +95,7 @@ export class AuthController {
     const base = this.google.publicUrl;
     try {
       const userId = await this.google.finish(query, (req as { cookies?: Record<string, string> }).cookies?.pvx_google);
-      const result = await this.authService.issue(userId);
+      const result = await this.authService.issue(userId, 'google', metaOf(req));
       this.setRefreshCookie(res, result.refreshToken);
       return res.redirect(`${base}/login#google=${encodeURIComponent(result.accessToken)}`, 302);
     } catch (e) {
@@ -80,8 +105,8 @@ export class AuthController {
   }
 
   @Post('setup')
-  async setup(@Body() dto: SetupDto, @Res({ passthrough: true }) res: FastifyReply) {
-    const result = await this.authService.setup(dto);
+  async setup(@Body() dto: SetupDto, @Req() req: FastifyRequest, @Res({ passthrough: true }) res: FastifyReply) {
+    const result = await this.authService.setup(dto, metaOf(req));
     this.setRefreshCookie(res, result.refreshToken);
     return { accessToken: result.accessToken, user: result.user };
   }
@@ -90,13 +115,12 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Req() req: FastifyRequest, @Res({ passthrough: true }) res: FastifyReply) {
-    const cookie = (req as { cookies?: Record<string, string> }).cookies?.refresh_token;
     try {
-      const result = await this.authService.refresh(cookie);
+      const result = await this.authService.refresh(cookieOf(req), metaOf(req));
       this.setRefreshCookie(res, result.refreshToken);
       return { accessToken: result.accessToken, user: result.user };
     } catch (e) {
-      res.clearCookie('refresh_token', { path: '/api/auth/refresh' });
+      this.clearRefreshCookie(res);
       throw e;
     }
   }
@@ -104,16 +128,41 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto, @Req() req: FastifyRequest, @Res({ passthrough: true }) res: FastifyReply) {
-    const result = await this.authService.login(dto, req.ip);
+    const result = await this.authService.login(dto, req.ip, metaOf(req).userAgent);
     this.setRefreshCookie(res, result.refreshToken);
     return { accessToken: result.accessToken, user: result.user };
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Res({ passthrough: true }) res: FastifyReply) {
-    res.clearCookie('refresh_token', { path: '/api/auth/refresh' });
+  async logout(@Req() req: FastifyRequest, @Res({ passthrough: true }) res: FastifyReply) {
+    // Ends the session on the server, so a copy of the cookie or the access token stops working too.
+    await this.authService.logout(cookieOf(req));
+    this.clearRefreshCookie(res);
     return { message: 'Logged out' };
+  }
+
+  /** The browsers and devices the signed-in person is signed in on. */
+  @Get('sessions')
+  @UseGuards(JwtAuthGuard)
+  listSessions(@CurrentUser() user: AuthUser) {
+    return this.sessions.listActive(user.id, user.sessionId);
+  }
+
+  /** Signs out every other device, keeping this one. */
+  @Post('sessions/revoke-others')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async revokeOthers(@CurrentUser() user: AuthUser) {
+    return { ended: await this.sessions.revokeAll(user.id, 'signed_out_elsewhere', user.sessionId) };
+  }
+
+  /** Signs out one of the person's own devices. */
+  @Delete('sessions/:id')
+  @UseGuards(JwtAuthGuard)
+  async revokeSession(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    await this.sessions.revokeOwn(user.id, String(id));
+    return { ended: id };
   }
 
   @Get('me')

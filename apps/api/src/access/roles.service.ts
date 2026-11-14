@@ -76,6 +76,14 @@ export class RolesService implements OnModuleInit {
       roleName: r.name,
       permissions: r.permissions,
       isSuperAdmin: r.key === SUPER_ADMIN,
+      homeDashboardId: u.homeDashboardId ?? r.homeDashboardId ?? null,
+      attributes: {
+        ...Object.fromEntries(Object.entries((u.attributes ?? {}) as Record<string, unknown>).map(([k, v]) => [k, String(v)])),
+        email: u.email,
+        ...(u.department ? { department: u.department } : {}),
+      },
+      // Never lock a Super Admin out of the controls, and only lock when there is a home to show.
+      locked: r.key !== SUPER_ADMIN && r.lockToHome && !!(u.homeDashboardId ?? r.homeDashboardId),
     };
   }
 
@@ -132,6 +140,30 @@ export class RolesService implements OnModuleInit {
     const data = this.clean(input);
     this.assertCanGrant(actor, data.permissions);
     return this.prisma.role.update({ where: { id }, data });
+  }
+
+  /**
+   * Sets the dashboard a role opens after sign-in, and whether it sees only that dashboard.
+   * Works on built-in roles too. The role is given view access to the dashboard if it lacks it.
+   */
+  async setHome(id: string, input: { homeDashboardId?: string | null; lockToHome?: boolean }) {
+    const role = await this.prisma.role.findUnique({ where: { id } });
+    if (!role) throw new NotFoundException('Role not found');
+    if (role.key === SUPER_ADMIN && input.lockToHome) throw new BadRequestException('Super Admin can never be limited to one dashboard');
+    const homeDashboardId = input.homeDashboardId ? String(input.homeDashboardId) : null;
+    if (homeDashboardId) {
+      const d = await this.prisma.dashboard.findUnique({ where: { id: homeDashboardId } });
+      if (!d) throw new BadRequestException('Dashboard not found');
+      await this.prisma.dashboardRole.upsert({
+        where: { dashboardId_roleId: { dashboardId: homeDashboardId, roleId: id } },
+        update: {},
+        create: { dashboardId: homeDashboardId, roleId: id },
+      });
+    }
+    return this.prisma.role.update({
+      where: { id },
+      data: { homeDashboardId, lockToHome: !!input.lockToHome && !!homeDashboardId },
+    });
   }
 
   async remove(id: string) {

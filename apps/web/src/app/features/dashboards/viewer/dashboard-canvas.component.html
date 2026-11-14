@@ -1,0 +1,108 @@
+<!--
+  Paarvix — See your data clearly.
+  Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+  Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+  Commercial licenses: support@kannantech.com
+-->
+<div class="canvas" [class.phone]="phone()" [class.tabbed]="tabbed()"
+  (touchstart)="onTouchStart($event)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd($event)">
+
+  @if (pull() > 0) {
+    <div class="pull" [style.height.px]="pull()" aria-hidden="true">
+      <pvx-icon name="refresh" [size]="20" [style.transform]="'rotate(' + pull() * 4 + 'deg)'" />
+    </div>
+  }
+
+  <!-- Desktop: the sections as a navigation that follows the reader. -->
+  @if (!phone() && sections().length > 1) {
+    <nav class="section-nav" [attr.aria-label]="'dashboards.sections' | translate">
+      <div class="track">
+      @for (s of sections(); track s.section.id; let i = $index) {
+        <button type="button" [class.on]="(visibleSection() || sections()[0].section.id) === s.section.id" (click)="goTo(s.section.id)">
+          {{ s.section.title || ('dashboards.sectionN' | translate: { n: i + 1 }) }}
+        </button>
+      }
+      </div>
+    </nav>
+  }
+
+  @for (s of shown(); track s.section.id) {
+    <section class="section" [attr.data-section]="s.section.id" [attr.aria-label]="s.section.title || null">
+      @if (s.section.title && (sections().length > 1 || phone())) {
+        <h2 class="section-title">{{ s.section.title }}</h2>
+      }
+
+      @if (s.headlines.length) {
+        <div class="headlines" [style.--n]="s.headlines.length">
+          @for (p of s.headlines; track p.id; let i = $index) {
+            <pvx-viewer-panel [style.--i]="i" [dashboardId]="dashboardId()" [panel]="p" [layout]="phone() ? 'phone' : 'desktop'" [asRole]="asRole()" [refreshKey]="refreshKey()" />
+          }
+        </div>
+      }
+
+      @if (s.notes.length) {
+        <div class="notes">
+          @for (p of s.notes; track p.id) { <pvx-viewer-panel [dashboardId]="dashboardId()" [panel]="p" [layout]="phone() ? 'phone' : 'desktop'" /> }
+        </div>
+      }
+
+      @if (s.stories.length) {
+        <div class="stories" [class.pair]="s.stories.length > 1">
+          @for (p of s.stories; track p.id; let i = $index) {
+            <pvx-viewer-panel [style.--i]="s.headlines.length + i" [dashboardId]="dashboardId()" [panel]="p" [layout]="phone() ? 'phone' : 'desktop'" [asRole]="asRole()" [refreshKey]="refreshKey()" />
+          }
+        </div>
+      }
+
+      @if (s.supporting.length) {
+        <div class="supporting" [class.strip]="phone() && s.supporting.length > 1">
+          @for (p of s.supporting; track p.id; let i = $index) {
+            <pvx-viewer-panel [style.--i]="s.headlines.length + s.stories.length + i" [dashboardId]="dashboardId()" [panel]="p" [layout]="phone() ? 'phone' : 'desktop'" [asRole]="asRole()" [refreshKey]="refreshKey()" />
+          }
+        </div>
+      }
+
+      @if (s.details.length) {
+        <div class="details">
+          @for (p of s.details; track p.id) {
+            <pvx-viewer-panel [dashboardId]="dashboardId()" [panel]="p" [layout]="phone() ? 'phone' : 'desktop'" [asRole]="asRole()" [refreshKey]="refreshKey()"
+              (openDetail)="openSheet($event)" />
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <!-- Phone: the sections as an app's tab bar. -->
+  @if (tabbed()) {
+    <nav class="tabbar" [attr.aria-label]="'dashboards.sections' | translate">
+      @for (s of sections(); track s.section.id; let i = $index) {
+        <button type="button" [class.on]="active() === i" [attr.aria-current]="active() === i ? 'page' : null" (click)="selectTab(i)">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="name">{{ s.section.title || ('dashboards.sectionN' | translate: { n: i + 1 }) }}</span>
+        </button>
+      }
+    </nav>
+  }
+</div>
+
+<!-- Phone: a long table opens full height, never squeezed into the page. -->
+<dialog #sheetDialog class="sheet" [style.transform]="sheetDrag() ? 'translateY(' + sheetDrag() + 'px)' : null" (close)="sheet.set(null)" (cancel)="closeSheet()" [attr.aria-label]="sheet()?.panel?.title">
+  @if (sheet(); as s) {
+    <header (touchstart)="sheetDragStart($event)" (touchmove)="sheetDragMove($event)" (touchend)="sheetDragEnd()">
+      <span class="grip" aria-hidden="true"></span>
+      <h2>{{ s.panel.title }}</h2>
+      <button type="button" class="close" (click)="closeSheet()" [attr.aria-label]="'common.cancel' | translate"><pvx-icon name="close" [size]="20" /></button>
+    </header>
+    <div class="sheet-body" tabindex="0">
+      <table>
+        <thead><tr>@for (f of s.data.fields; track f) { <th scope="col">{{ f }}</th> }</tr></thead>
+        <tbody>
+          @for (row of s.data.rows.slice(0, 1000); track $index) {
+            <tr>@for (f of s.data.fields; track f) { <td [class.num]="isNum(row[f])">{{ cell(row[f]) }}</td> }</tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</dialog>

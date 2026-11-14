@@ -81,7 +81,7 @@
 - Private `paarvix-pro`: proprietary. Never published or copied into public.
 - **Plugin SDK** (`@paarvix/plugin-sdk`) and **embed SDK client**: **MIT** — so third parties can build paid plugins and embed without AGPL fear (grows the ecosystem and the marketplace).
 - Root files: `LICENSE`, `COMMERCIAL-LICENSE.md`, `TRADEMARK.md`, `NOTICE`, `CONTRIBUTING.md` (CLA via CLA Assistant), `SECURITY.md`, `CODE_OF_CONDUCT.md`, `GOVERNANCE.md`, `CHANGELOG.md`, `THIRD_PARTY_LICENSES.md`, `.env.example`.
-- Allowed dependency licenses: MIT, Apache-2.0, BSD, ISC, MPL-2.0, AGPL/GPL-compatible. Forbidden: proprietary, non-commercial, SSPL, BSL, unknown. CI runs a license checker.
+- Allowed dependency licenses: MIT, Apache-2.0, BSD, ISC, MPL-2.0, AGPL/GPL-compatible; OFL-1.1 for font files only (founder decision, 2026-11-14). Forbidden: proprietary, non-commercial, SSPL, BSL, unknown. CI runs a license checker.
 - "Paarvix" and "KannanTech" names/logos are trademarks; forks may not use them.
 
 ---

@@ -103,9 +103,13 @@ interface RowNote {
     .pvx-source:last-child { border-bottom: 0; }
     .pvx-row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; overflow-wrap: anywhere; }
     .pvx-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .pvx-actions button { min-height: 44px; padding: 0 12px; border: 1px solid var(--pvx-border); border-radius: var(--pvx-radius); background: transparent; color: inherit; cursor: pointer; }
+    .pvx-actions button { min-height: 36px; padding: 0 14px; border: 1px solid var(--pvx-border-strong); border-radius: var(--pvx-radius); background: var(--pvx-bg-raised);
+      color: var(--pvx-text); font: 600 13px var(--pvx-font-ui); cursor: pointer; box-shadow: 0 1px 2px rgba(12, 18, 32, 0.05); transition: transform 120ms ease-out, background-color 120ms ease-out; }
+    .pvx-actions button:hover { background: var(--pvx-bg-sunken); }
+    .pvx-actions button:active { transform: scale(.97); }
     .pvx-actions button:disabled { opacity: 0.6; cursor: wait; }
-    .pvx-badge { display: inline-block; margin-right: 8px; padding: 2px 8px; border-radius: 999px; background: var(--pvx-primary); color: #fff; font-size: 0.75rem; }
+    .pvx-badge { display: inline-block; margin-right: 8px; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      background: color-mix(in srgb, var(--pvx-primary) 12%, transparent); color: var(--pvx-link); }
     .pvx-meta { color: var(--pvx-text-muted); font-size: 0.875rem; }
     .pvx-error { color: var(--pvx-danger); overflow-wrap: anywhere; }
     progress { width: 100%; }

@@ -157,6 +157,12 @@ say "Preparing database schema"
 ./node_modules/.bin/prisma db push >/dev/null || fail "Schema change would lose data or failed. Read the message above; nothing was changed."
 ok "Schema up to date"
 
+node apps/web/scripts/copy-monaco.mjs || fail "Could not prepare the SQL editor (Monaco)"
+
+# A stale library cache can make the browser load two copies of Angular after packages change,
+# which shows up as "NG0203 ... inject() must be called from an injection context". Start clean.
+rm -rf apps/web/.angular/cache
+
 say "Building shared types"
 (cd packages/shared && npx tsc) || fail "Shared types did not compile"
 ok "Shared types built"

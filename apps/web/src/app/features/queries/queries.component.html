@@ -1,0 +1,315 @@
+<!--
+  Paarvix — See your data clearly.
+  Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+  Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+  Commercial licenses: support@kannantech.com
+-->
+<div class="page">
+  <header class="pvx-page-head">
+    <div>
+      <h1>{{ loadedQuery()?.name || ('queries.title' | translate) }}</h1>
+      <p>{{ 'queries.subtitle' | translate }}</p>
+    </div>
+    <div class="actions">
+      <div class="seg" role="tablist" [attr.aria-label]="'queries.mode' | translate">
+        <button type="button" role="tab" [class.on]="mode() === 'builder'" [attr.aria-selected]="mode() === 'builder'" (click)="setMode('builder')">
+          {{ 'queries.builder' | translate }}
+        </button>
+        <button type="button" role="tab" [class.on]="mode() === 'sql'" [attr.aria-selected]="mode() === 'sql'" (click)="setMode('sql')"
+          [disabled]="!sqlAllowed()" [attr.title]="sourceId() && !sqlAllowed() ? ('queries.sqlNotForSheets' | translate) : null">
+          {{ 'queries.sql' | translate }}
+        </button>
+      </div>
+      <button class="pvx-btn" type="button" (click)="newQuery()">{{ 'queries.new' | translate }}</button>
+      @if (canSave()) {
+        <button class="pvx-btn" type="button" (click)="startSave()" [disabled]="!canRun()">{{ 'common.save' | translate }}</button>
+      }
+      @if (canBuildDashboards() && loadedQuery()) {
+        <button class="pvx-btn" type="button" (click)="startAddToDashboard()">{{ 'queries.addToDashboard' | translate }}</button>
+      }
+      <button class="pvx-btn primary" type="button" (click)="run()" [disabled]="!canRun() || running()" [attr.title]="'queries.runHint' | translate">
+        {{ (running() ? 'queries.running' : 'queries.run') | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (saving()) {
+    <form class="pvx-panel save" (ngSubmit)="save()">
+      <label class="pvx-field"><span>{{ 'queries.saveName' | translate }}</span>
+        <input class="pvx-input" name="saveName" [(ngModel)]="saveName" maxlength="100" required minlength="2" /></label>
+      <label class="pvx-check"><input type="checkbox" name="saveShared" [(ngModel)]="saveShared" />
+        <span>{{ 'queries.shareHint' | translate }}</span></label>
+      <div class="row">
+        <button class="pvx-btn primary" type="submit" [disabled]="saveName.trim().length < 2">
+          {{ (loadedQuery() && isMine(loadedQuery()!) ? 'queries.update' : 'common.save') | translate }}
+        </button>
+        @if (loadedQuery() && isMine(loadedQuery()!)) {
+          <button class="pvx-btn" type="button" (click)="save(true)" [disabled]="saveName.trim().length < 2">{{ 'queries.saveCopy' | translate }}</button>
+        }
+        <button class="pvx-btn ghost" type="button" (click)="saving.set(false)">{{ 'common.cancel' | translate }}</button>
+      </div>
+    </form>
+  }
+
+  @if (addingToDashboard()) {
+    <div class="pvx-panel save">
+      @if (editableDashboards().length) {
+        <label class="pvx-field"><span>{{ 'queries.pickDashboard' | translate }}</span>
+          <select class="pvx-select" #dsel>
+            @for (d of editableDashboards(); track d.id) { <option [value]="d.id">{{ d.title }}</option> }
+          </select></label>
+        <div class="row">
+          <button class="pvx-btn primary" type="button" (click)="addToDashboard(dsel.value)">{{ 'queries.addPanelHere' | translate }}</button>
+          <button class="pvx-btn ghost" type="button" (click)="addingToDashboard.set(false)">{{ 'common.cancel' | translate }}</button>
+        </div>
+      } @else {
+        <p>{{ 'queries.noDashboards' | translate }} <a routerLink="/dashboards">{{ 'queries.makeDashboard' | translate }}</a></p>
+        <button class="pvx-btn ghost" type="button" (click)="addingToDashboard.set(false)">{{ 'common.cancel' | translate }}</button>
+      }
+    </div>
+  }
+
+  @if (error()) { <p class="pvx-note error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="pvx-note ok" role="status">{{ notice() }}</p> }
+
+  @if (sourcesLoaded() && sources().length === 0) {
+    <div class="pvx-panel pvx-empty">
+      <p>{{ 'queries.noSources' | translate }}</p>
+      <a class="pvx-btn primary" routerLink="/datasources">{{ 'queries.addSource' | translate }}</a>
+    </div>
+  } @else {
+    <div class="layout">
+      <!-- Saved queries and history -->
+      <aside class="side pvx-panel">
+        <div class="side-tabs" role="tablist">
+          <button type="button" role="tab" [class.on]="panel() === 'saved'" [attr.aria-selected]="panel() === 'saved'" (click)="panel.set('saved')">
+            {{ 'queries.saved' | translate }} <span class="pvx-num count">{{ saved().length }}</span>
+          </button>
+          <button type="button" role="tab" [class.on]="panel() === 'history'" [attr.aria-selected]="panel() === 'history'" (click)="panel.set('history')">
+            {{ 'queries.recent' | translate }}
+          </button>
+        </div>
+        @if (panel() === 'saved') {
+          <ul class="list">
+            @for (q of saved(); track q.id) {
+              <li [class.on]="loadedQuery()?.id === q.id">
+                <button type="button" class="item" (click)="openSaved(q)">
+                  <strong>{{ q.name }}</strong>
+                  <span>{{ q.datasource.name }} · {{ (q.kind === 'sql' ? 'queries.sql' : 'queries.builder') | translate }}
+                    @if (q.visibility === 'shared') { · {{ 'queries.shared' | translate }} }
+                    @if (!isMine(q)) { · {{ q.creator.name }} }</span>
+                </button>
+                @if (isMine(q) && canSave()) {
+                  <button type="button" class="del" (click)="deleteSaved(q)" [attr.aria-label]="'queries.delete' | translate: { name: q.name }">
+                    <pvx-icon name="close" [size]="16" /></button>
+                }
+              </li>
+            } @empty {
+              <li class="empty">{{ 'queries.noSaved' | translate }}</li>
+            }
+          </ul>
+        } @else {
+          <ul class="list">
+            @for (h of history(); track h.id) {
+              <li>
+                <button type="button" class="item" (click)="openHistory(h)">
+                  <strong class="mono">{{ historyLabel(h) }}</strong>
+                  <span class="pvx-num">{{ timeOf(h.createdAt) }} · {{ h.datasource.name }} ·
+                    @if (h.error) { <em class="bad">{{ 'queries.failed' | translate }}</em> }
+                    @else { {{ 'queries.rowsShort' | translate: { count: h.rowCount } }} }</span>
+                </button>
+              </li>
+            } @empty {
+              <li class="empty">{{ 'queries.noHistory' | translate }}</li>
+            }
+          </ul>
+          @if (history().length) {
+            <button type="button" class="pvx-btn small ghost clear" (click)="clearHistory()">{{ 'queries.clearHistory' | translate }}</button>
+          }
+        }
+      </aside>
+
+      <section class="main">
+        <!-- Data -->
+        <div class="pvx-panel steps">
+          <div class="step">
+            <span class="label">{{ 'queries.data' | translate }}</span>
+            <div class="fields">
+              <label class="pvx-sr-only" for="q-source">{{ 'queries.source' | translate }}</label>
+              <select id="q-source" class="pvx-select" [ngModel]="sourceId()" (ngModelChange)="pickSource($event)">
+                <option value="">{{ 'queries.chooseSource' | translate }}</option>
+                @for (s of sources(); track s.id) { <option [value]="s.id">{{ s.name }}</option> }
+              </select>
+              @if (mode() === 'builder' && schema().length) {
+                <label class="pvx-sr-only" for="q-table">{{ 'queries.table' | translate }}</label>
+                <select id="q-table" class="pvx-select" [ngModel]="tableName()" (ngModelChange)="pickTable($event)">
+                  <option value="">{{ 'queries.chooseTable' | translate }}</option>
+                  @for (t of schema(); track t.name) {
+                    <option [value]="t.name">{{ t.name }}@if (t.rowCount !== undefined) { ({{ t.rowCount }}) }</option>
+                  }
+                </select>
+              }
+            </div>
+          </div>
+
+          @if (mode() === 'builder' && table()) {
+            <!-- Columns -->
+            @if (!summarising()) {
+              <div class="step">
+                <span class="label">{{ 'queries.columns' | translate }}</span>
+                <div class="chips">
+                  @for (c of tableColumns(); track c.name) {
+                    <label class="chip" [class.on]="columns().includes(c.name)">
+                      <input type="checkbox" [checked]="columns().includes(c.name)" (change)="toggleColumn(c.name, $any($event.target).checked)" />
+                      {{ c.name }}
+                    </label>
+                  }
+                  <span class="hint">{{ (columns().length ? 'queries.columnsSome' : 'queries.columnsAll') | translate: { count: columns().length } }}</span>
+                </div>
+              </div>
+            }
+
+            <!-- Filters -->
+            <div class="step">
+              <span class="label">{{ 'queries.filter' | translate }}</span>
+              <div class="rows">
+                @for (f of filters(); track $index; let i = $index) {
+                  <div class="rule">
+                    <select class="pvx-select" [ngModel]="f.column" (ngModelChange)="updateFilter(i, { column: $event })" [attr.aria-label]="'queries.column' | translate">
+                      @for (c of tableColumns(); track c.name) { <option [value]="c.name">{{ c.name }}</option> }
+                    </select>
+                    <select class="pvx-select op" [ngModel]="f.op" (ngModelChange)="updateFilter(i, { op: $event })" [attr.aria-label]="'queries.condition' | translate">
+                      @for (o of opsFor(f.column); track o) { <option [value]="o">{{ 'queries.ops.' + o | translate }}</option> }
+                    </select>
+                    @if (f.op !== 'isNull') {
+                      <input class="pvx-input" [type]="typeOf(f.column) === 'date' ? 'date' : typeOf(f.column) === 'number' && f.op !== 'in' ? 'number' : 'text'"
+                        [ngModel]="f.value" (ngModelChange)="updateFilter(i, { value: $event })"
+                        [placeholder]="(f.op === 'in' ? 'queries.listHint' : 'queries.value') | translate" [attr.aria-label]="'queries.value' | translate" />
+                    }
+                    <button type="button" class="pvx-btn small ghost" (click)="removeFilter(i)" [attr.aria-label]="'queries.removeStep' | translate"><pvx-icon name="close" [size]="16" /></button>
+                  </div>
+                }
+                <button type="button" class="pvx-btn small" (click)="addFilter()"><pvx-icon name="plus" [size]="16" />{{ 'queries.addFilter' | translate }}</button>
+              </div>
+            </div>
+
+            <!-- Summarise -->
+            <div class="step">
+              <span class="label">{{ 'queries.summarise' | translate }}</span>
+              <div class="rows">
+                @for (a of aggregates(); track $index; let i = $index) {
+                  <div class="rule">
+                    <select class="pvx-select op" [ngModel]="a.fn" (ngModelChange)="updateAggregate(i, { fn: $event })" [attr.aria-label]="'queries.measure' | translate">
+                      @for (fn of ['count', 'sum', 'avg', 'min', 'max']; track fn) { <option [value]="fn">{{ 'queries.agg.' + fn | translate }}</option> }
+                    </select>
+                    @if (a.fn !== 'count' || a.column) {
+                      <select class="pvx-select" [ngModel]="a.column" (ngModelChange)="updateAggregate(i, { column: $event })" [attr.aria-label]="'queries.column' | translate">
+                        @if (a.fn === 'count') { <option value="">{{ 'queries.rows' | translate }}</option> }
+                        @for (c of (a.fn === 'sum' || a.fn === 'avg' ? numberColumns() : tableColumns()); track c.name) { <option [value]="c.name">{{ c.name }}</option> }
+                      </select>
+                    }
+                    <button type="button" class="pvx-btn small ghost" (click)="removeAggregate(i)" [attr.aria-label]="'queries.removeStep' | translate"><pvx-icon name="close" [size]="16" /></button>
+                  </div>
+                }
+                <button type="button" class="pvx-btn small" (click)="addAggregate()"><pvx-icon name="plus" [size]="16" />{{ 'queries.addMeasure' | translate }}</button>
+                @if (summarising()) {
+                  <div class="by">
+                    <span>{{ 'queries.groupBy' | translate }}</span>
+                    <div class="chips">
+                      @for (c of tableColumns(); track c.name) {
+                        <label class="chip" [class.on]="groupBy().includes(c.name)">
+                          <input type="checkbox" [checked]="groupBy().includes(c.name)" (change)="toggleGroup(c.name, $any($event.target).checked)" />
+                          {{ c.name }}
+                        </label>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Sort and limit -->
+            <div class="step">
+              <span class="label">{{ 'queries.sort' | translate }}</span>
+              <div class="rows">
+                @for (s of sort(); track $index; let i = $index) {
+                  <div class="rule">
+                    <select class="pvx-select" [ngModel]="s.column" (ngModelChange)="updateSort(i, { column: $event })" [attr.aria-label]="'queries.column' | translate">
+                      @for (n of outputNames(); track n) { <option [value]="n">{{ n }}</option> }
+                    </select>
+                    <select class="pvx-select op" [ngModel]="s.dir" (ngModelChange)="updateSort(i, { dir: $event })" [attr.aria-label]="'queries.direction' | translate">
+                      <option value="desc">{{ 'queries.desc' | translate }}</option>
+                      <option value="asc">{{ 'queries.asc' | translate }}</option>
+                    </select>
+                    <button type="button" class="pvx-btn small ghost" (click)="removeSort(i)" [attr.aria-label]="'queries.removeStep' | translate"><pvx-icon name="close" [size]="16" /></button>
+                  </div>
+                }
+                <div class="rule">
+                  <button type="button" class="pvx-btn small" (click)="addSort()"><pvx-icon name="plus" [size]="16" />{{ 'queries.addSort' | translate }}</button>
+                  <label class="limit"><span>{{ 'queries.limit' | translate }}</span>
+                    <input class="pvx-input" type="number" min="1" max="10000" [ngModel]="limit()" (ngModelChange)="setLimit($event)" /></label>
+                  <button type="button" class="pvx-btn small ghost push" (click)="showSql.set(!showSql())" [attr.aria-expanded]="showSql()">
+                    {{ (showSql() ? 'queries.hideSql' : 'queries.showSql') | translate }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            @if (showSql()) {
+              <div class="sql-preview">
+                <pre>{{ sqlPreview() }}</pre>
+                <small>{{ 'queries.sqlPreviewNote' | translate }}</small>
+              </div>
+            }
+          }
+
+          @if (mode() === 'sql' && sourceId()) {
+            <div class="step block">
+              <pvx-sql-editor [value]="sql()" [schema]="schema()" (changed)="sql.set($event)" (run)="run()" />
+              <small class="hint">{{ 'queries.sqlHint' | translate }}</small>
+            </div>
+          }
+        </div>
+
+        <!-- Results -->
+        @if (result(); as r) {
+          <div class="pvx-panel results">
+            <div class="results-head">
+              <span class="pvx-num meta">
+                {{ (r.rows.length === 1 ? 'queries.oneRow' : 'queries.rowCount') | translate: { count: r.rows.length } }} ·
+                {{ 'queries.took' | translate: { ms: r.durationMs } }}
+              </span>
+              @if (r.truncated) { <span class="pvx-tag warn">{{ 'queries.truncated' | translate }}</span> }
+              <div class="seg small" role="tablist">
+                <button type="button" role="tab" [class.on]="view() === 'table'" [attr.aria-selected]="view() === 'table'" (click)="view.set('table')">{{ 'queries.table' | translate }}</button>
+                <button type="button" role="tab" [class.on]="view() === 'chart'" [attr.aria-selected]="view() === 'chart'" (click)="view.set('chart')">{{ 'queries.chart' | translate }}</button>
+              </div>
+              <button type="button" class="pvx-btn small" (click)="exportCsv()" [disabled]="!r.rows.length">{{ 'queries.csv' | translate }}</button>
+            </div>
+
+            @if (r.rows.length === 0) {
+              <p class="pvx-empty">{{ 'queries.noRows' | translate }}</p>
+            } @else if (view() === 'chart') {
+              <pvx-result-chart [fields]="r.fields" [rows]="r.rows" />
+            } @else {
+              <div class="grid" role="table" [attr.aria-rowcount]="r.rows.length + 1" [style.--cols]="r.fields.length">
+                <div class="grid-head" role="row">
+                  @for (f of r.fields; track f) { <div role="columnheader">{{ f }}</div> }
+                </div>
+                <cdk-virtual-scroll-viewport itemSize="38" class="viewport">
+                  <div *cdkVirtualFor="let row of r.rows; let i = index" class="grid-row" role="row" [attr.aria-rowindex]="i + 2">
+                    @for (f of r.fields; track f) {
+                      <div role="cell" [class.num]="isNumberCell(row[f])">{{ cell(row[f]) }}</div>
+                    }
+                  </div>
+                </cdk-virtual-scroll-viewport>
+              </div>
+            }
+          </div>
+        } @else if (!running() && !error() && (mode() === 'sql' ? !!sourceId() : !table())) {
+          <p class="start">{{ (sourceId() ? (mode() === 'sql' ? 'queries.startSql' : 'queries.startTable') : 'queries.startSource') | translate }}</p>
+        }
+      </section>
+    </div>
+  }
+</div>

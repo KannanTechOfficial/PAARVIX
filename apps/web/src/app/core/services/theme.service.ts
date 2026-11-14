@@ -22,12 +22,32 @@ export class ThemeService {
     effect(() => {
       const t = this.theme();
       document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem(this.storageKey, t);
+      // The phone's status bar takes the page colour, so it blends into the top bar.
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#06080D' : '#F5F6F8');
+    });
+    // Until someone chooses, follow the device, including when it switches at sunset.
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!this.saved()) this.theme.set(e.matches ? 'dark' : 'light');
     });
   }
 
+  /** An explicit choice is remembered on this device; without one the device setting applies. */
   toggle() {
     this.theme.update((t) => (t === 'light' ? 'dark' : 'light'));
+    try {
+      localStorage.setItem(this.storageKey, this.theme());
+    } catch {
+      /* storage blocked: the choice lasts for this visit */
+    }
+  }
+
+  private saved(): Theme | null {
+    try {
+      const v = localStorage.getItem(this.storageKey);
+      return v === 'light' || v === 'dark' ? v : null;
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -46,7 +66,7 @@ export class ThemeService {
   }
 
   private getInitialTheme(): Theme {
-    const saved = localStorage.getItem(this.storageKey) as Theme | null;
+    const saved = this.saved();
     if (saved) return saved;
     return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'dark'

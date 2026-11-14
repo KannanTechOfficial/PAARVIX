@@ -21,6 +21,14 @@ export interface AuthUser {
   roleName: string;
   permissions: string[];
   isSuperAdmin: boolean;
+  /** The dashboard opened after sign-in: the person's own choice, else their role's. */
+  homeDashboardId: string | null;
+  /** Compared by row rules: the person's custom attributes plus email and department. */
+  attributes: Record<string, string>;
+  /** True when the role is set to show only the home dashboard. The API enforces it too. */
+  locked: boolean;
+  /** The server-side session this request belongs to. Set by the JWT strategy. */
+  sessionId?: string;
 }
 
 export const CurrentUser = createParamDecorator((_: unknown, ctx: ExecutionContext): AuthUser => {
@@ -33,5 +41,5 @@ export function can(user: AuthUser, permission: string): boolean {
 
 /** Builds the context every data path needs. rowFilters stay empty until row rules exist. */
 export function toSecurityContext(user: AuthUser): SecurityContext {
-  return { userId: user.id, role: user.role, permissions: user.permissions, tenantId: null, rowFilters: [] };
+  return { userId: user.id, role: user.role, permissions: user.permissions, attributes: user.attributes, tenantId: null, rowFilters: [] };
 }

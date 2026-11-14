@@ -1,0 +1,145 @@
+/*
+ * Paarvix — See your data clearly.
+ * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+ * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+ * Commercial licenses: support@kannantech.com
+ */
+
+// No frame. Panels are separated by space and type, not by boxes.
+:host {
+  display: flex; flex-direction: column; min-width: 0; color: var(--pvx-text);
+  // Panels arrive in a short cascade, in reading order (--i is set by the canvas).
+  animation: vp-enter 480ms cubic-bezier(.16, 1, .3, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+@keyframes vp-enter { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) { :host { animation: none; } }
+
+.title { font-size: var(--vp-title, 15px); font-weight: 600; letter-spacing: -0.005em; line-height: 1.3; }
+.head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+.head .title { flex: 1; min-width: 0; }
+.count { font-size: 12px; color: var(--pvx-text-muted); }
+.muted { color: var(--pvx-text-muted); font-size: 14px; }
+.err { color: var(--pvx-danger); font-size: 13px; }
+.hint { font-size: 12px; color: var(--pvx-warn-text); margin-bottom: 8px; max-width: 70ch; }
+.offline { margin-top: 8px; font-size: 12px; color: var(--pvx-warn-text); }
+
+.toggle {
+  display: inline-flex; padding: 6px; border: 0; border-radius: 6px; background: none;
+  color: var(--pvx-text-muted); cursor: pointer; opacity: .7;
+  transition: opacity 150ms ease-out, background-color 150ms ease-out;
+  &:hover, &:focus-visible { opacity: 1; background: var(--pvx-bg-sunken); color: var(--pvx-text); }
+}
+
+// ---------- headline ----------
+:host(.role-headline) { gap: 2px; }
+.label { font-size: var(--vp-label, 13px); font-weight: 500; color: var(--pvx-text-muted); line-height: 1.3; }
+.value {
+  font-size: var(--vp-value, clamp(30px, 3.2vw, 44px));
+  font-weight: 700; letter-spacing: -0.025em; line-height: 1.05; margin: 4px 0 2px;
+  font-variant-numeric: tabular-nums;
+}
+.delta {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px;
+  font-size: var(--vp-delta, 13px); font-weight: 600; color: var(--pvx-text);
+  .pill {
+    display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px 2px 6px; border-radius: 999px;
+    background: color-mix(in srgb, var(--pvx-text) 7%, transparent);
+  }
+  .since { font-weight: 400; color: var(--pvx-text-muted); }
+}
+.spark { width: 100%; max-width: 220px; height: var(--vp-spark, 28px); margin-top: 8px; overflow: visible; }
+.spark-line { fill: none; stroke: var(--pvx-primary); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.spark-area { fill: var(--pvx-primary); opacity: .08; }
+:host(.lay-wall) .spark-line { stroke: #7EA2F2; }
+:host(.lay-wall) .spark-area { fill: #7EA2F2; }
+
+// ---------- charts ----------
+.chart { width: 100%; height: var(--vp-chart, 300px); }
+:host(.role-supporting) .chart { height: var(--vp-chart-small, 220px); }
+
+// ---------- notes ----------
+.note { font-size: var(--vp-note, 15px); line-height: 1.65; color: var(--pvx-text); max-width: 68ch; white-space: pre-wrap; }
+
+// ---------- tables ----------
+.table-scroll { overflow: auto; max-height: var(--vp-table, 440px); border-top: 1px solid var(--pvx-border); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th {
+  position: sticky; top: 0; z-index: 1; text-align: left; white-space: nowrap;
+  font-size: 12px; font-weight: 600; color: var(--pvx-text-muted);
+  padding: 10px 14px; background: var(--pvx-bg); border-bottom: 1px solid var(--pvx-border);
+}
+td { padding: 0 14px; height: 40px; border-bottom: 1px solid var(--pvx-border); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:hover td { background: var(--pvx-bg-sunken); }
+.more {
+  align-self: flex-start; margin-top: 10px; padding: 8px 0; border: 0; background: none;
+  font: 600 14px var(--pvx-font-ui); color: var(--pvx-link); cursor: pointer;
+  &:hover { text-decoration: underline; text-underline-offset: 3px; }
+}
+
+// ---------- loading ----------
+.skel, .skel-table span {
+  display: block; border-radius: 8px;
+  // A soft light sweeps across while data loads.
+  background: linear-gradient(100deg, var(--pvx-bg-sunken) 30%, color-mix(in srgb, var(--pvx-bg-sunken) 40%, var(--pvx-bg)) 50%, var(--pvx-bg-sunken) 70%) 0 0 / 300% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.skel-value { width: 55%; height: 40px; margin: 6px 0; }
+.skel-line { width: 35%; height: 12px; }
+.skel-chart { height: var(--vp-chart, 300px); }
+.skel-table { display: flex; flex-direction: column; gap: 10px; span { height: 14px; } span:nth-child(odd) { width: 92%; } }
+@keyframes pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .skel, .skel-table span { animation: none; } }
+
+// ---------- phone ----------
+:host(.lay-phone) {
+  --vp-value: 30px; --vp-chart: 240px; --vp-chart-small: 200px; --vp-title: 16px;
+  td { height: 44px; }
+}
+
+// ---------- wall display: read from across the room ----------
+:host(.lay-wall) {
+  --vp-label: 28px; --vp-value: clamp(64px, 6vw, 120px); --vp-delta: 26px; --vp-spark: 56px;
+  --vp-title: 32px; --vp-chart: 100%; --vp-chart-small: 100%; --vp-note: 30px;
+  height: 100%;
+  .chart { flex: 1; min-height: 0; }
+  .spark { max-width: 360px; }
+  .delta ::ng-deep svg { width: 28px; height: 28px; }
+  table { font-size: 26px; }
+  th { font-size: 22px; padding: 14px 18px; }
+  td { height: 64px; padding: 0 18px; }
+  .table-scroll { max-height: none; overflow: hidden; }
+}
+
+// ---------- surfaces (laptop and phone; the wall display stays frameless) ----------
+// Headlines are soft tiles; charts and tables sit on rounded surfaces. No borders in light mode,
+// a gentle shadow instead; in dark mode a faint lit edge lifts them off the black.
+:host(.lay-desktop.role-headline), :host(.lay-phone.role-headline) {
+  background: var(--pvx-bg-card); border-radius: var(--pvx-radius-lg); box-shadow: var(--pvx-shadow-sm); padding: 18px 20px 16px;
+}
+:host(.lay-desktop.role-story), :host(.lay-desktop.role-supporting), :host(.lay-desktop.role-detail),
+:host(.lay-phone.role-story), :host(.lay-phone.role-supporting), :host(.lay-phone.role-detail) {
+  background: var(--pvx-bg-card); border-radius: var(--pvx-radius-lg); box-shadow: var(--pvx-shadow-sm); padding: 20px 22px 18px;
+}
+:host(.lay-phone.role-headline) { padding: 14px 14px 12px; }
+:host(.lay-phone.role-story), :host(.lay-phone.role-supporting), :host(.lay-phone.role-detail) { padding: 16px 16px 14px; }
+// Dark: a faint sheen at the top of each surface, like light catching an edge.
+:host-context([data-theme='dark']).lay-desktop:not(.role-note), :host-context([data-theme='dark']).lay-phone:not(.role-note) {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 60%);
+}
+:host(.lay-desktop.role-detail) .table-scroll, :host(.lay-phone.role-detail) .table-scroll { margin: 0 -22px; padding: 0 8px; }
+:host(.lay-desktop.role-detail) table, :host(.lay-phone.role-detail) table { th, td { padding-left: 14px; padding-right: 14px; } th { background: var(--pvx-bg-card); } }
+
+// ---------- change colours ----------
+.pill.tone-good { background: var(--pvx-good-bg); color: var(--pvx-good); }
+.pill.tone-bad { background: var(--pvx-bad-bg); color: var(--pvx-bad); }
+.spark.tone-good .spark-line { stroke: var(--pvx-good); }
+.spark.tone-good .spark-area { fill: var(--pvx-good); }
+.spark.tone-bad .spark-line { stroke: var(--pvx-bad); }
+.spark.tone-bad .spark-area { fill: var(--pvx-bad); }
+
+.label { letter-spacing: -0.003em; }
+.value { font-family: var(--pvx-font-brand); font-weight: 600; letter-spacing: -0.03em; }
+:host(.lay-wall) .value { font-family: var(--pvx-font-ui); font-weight: 700; }

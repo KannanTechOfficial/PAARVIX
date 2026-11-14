@@ -36,7 +36,7 @@ jobs:
         run: |
           npx -y license-checker@25.0.1 --production --excludePrivatePackages \
             --excludePackages 'elkjs@0.11.1' \
-            --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;MPL-2.0;AGPL-3.0-only;AGPL-3.0-or-later;Unlicense'
+            --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;MPL-2.0;AGPL-3.0-only;AGPL-3.0-or-later;Unlicense;OFL-1.1'
 
       - name: Generate Prisma client
         working-directory: apps/api

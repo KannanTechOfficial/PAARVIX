@@ -52,6 +52,12 @@ export class RolesController {
     return this.roles.update(id, body, user);
   }
 
+  @Patch(':id/home')
+  @RequirePermissions('roles:write')
+  setHome(@Param('id') id: string, @Body() body: { homeDashboardId?: string | null; lockToHome?: boolean }) {
+    return this.roles.setHome(id, body ?? {});
+  }
+
   @Delete(':id')
   @RequirePermissions('roles:write')
   remove(@Param('id') id: string) {

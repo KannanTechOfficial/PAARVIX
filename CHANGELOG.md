@@ -7,7 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Queries page: build a query step by step (columns, filters, summarise, sort, limit) or write SQL in the Monaco editor with table and column suggestions. Results show as a table with Indian number grouping and DD-MM-YYYY dates, or as a bar, line or pie chart, and download as CSV.
+- Saved queries, private by default and shareable with everyone who can use the source, and a private list of each person's last 50 runs.
+- Super Admin panel: users, roles with a role editor, per-source data access, plugins, organisation settings and a theme. The menu shows only what each person may open.
+- Google sign-in for people an administrator has added.
+- Dashboards: drag-and-drop panels from saved queries (number, bar, line, pie, table, text), chosen roles per dashboard, and previews as any role or person. Viewers never send queries; the server runs each panel's saved query.
+- New dashboard viewer, composed for each device instead of one grid of boxes. Panels have a role (headline, main chart, supporting chart, detail table, note) and sit in sections. Laptop: frameless headline numbers with change and trend line, sticky section navigation. Phone: an app with a top bar, two-column headlines, bottom section tabs, swipe between sections, pull to refresh, tables in a bottom sheet. TV: `/tv/<id>`, dark, large type, one section per screen on rotation, clock, stale-data warning, screen kept awake.
+- New look across the app. Light: quiet neutral sidebar with the Paarvix mark, soft rounded surfaces and shadows, a segmented section control. Dark: near-black with lifted surfaces and a brighter brand blue. Headline numbers sit on tiles, and their change is green or red by meaning: each headline says whether a rise is good or bad news. The theme follows the device until someone chooses. New split-screen sign-in page.
+- Brand fonts (Inter, Poppins, JetBrains Mono) are bundled and served by Paarvix itself, so they also work offline. Fonts are licensed OFL-1.1, now allowed for font files only.
+- Dashboards feel native: headline numbers count up on first load, panels arrive in a short cascade, buttons respond to presses, a phone's large title collapses into the top bar, the detail sheet can be dragged down to close, and Android phones give a light tap on tab changes. All motion is off when the device asks for reduced motion.
+- Paarvix can be installed as an app (manifest, icons, service worker that never caches API data). Panel results are kept on the device for weak connections and deleted at sign-out.
+- Dashboards saved in the old format are upgraded automatically on load and on the next save.
+- Home dashboard per role or person, with an option to show only that dashboard and no menu.
+- Row rules: each person sees only their own rows (for example a student's own record, or an HOD's own department), enforced on the server for every dashboard, query and preview.
+- `./dev.sh` runs Paarvix on a laptop with live reload, using only Paarvix's own database container.
+
+### Fixed
+
+- Sign out now really signs out. Before, the login page could open before the server had deleted the session cookie, and signed the person straight back in.
+- After Google sign-in, people land on their home dashboard. The Sign in button no longer stays on "Loading" if the next page cannot open.
+
 ### Security
+
+- Sessions are kept on the server (ADR 0002). Signing out ends the session itself, so a copied cookie or token stops working at once. Each renewal uses a one-time token; an old one replayed ends the session. A password reset or deactivation signs the person out everywhere immediately, not after 15 minutes. Sessions end after 7 days unused and 30 days at most (`JWT_REFRESH_EXPIRY`, `SESSION_MAX_AGE`). Everyone signs in once more after this update.
+- New *Your account* page (click your name in the menu) lists signed-in devices, and lets you sign out any one of them or all the others. Administrators can *Sign out everywhere* for a person from Users, for example after a lost phone.
+- Every API route now names the permission it needs; a route without one is refused.
+- SQL is parsed before it runs (PostgreSQL, MySQL, MariaDB). Only one read-only SELECT is accepted, and text that cannot be parsed is refused.
+- Sessions renew silently from an httpOnly cookie; the access token is no longer kept in browser storage.
+- Five wrong passwords for one account from one address pause sign-in there for 15 minutes. Sign-in no longer reveals which emails have accounts.
+- Resetting a password or deactivating a user ends their open sessions.
+- The Docker API port now listens on the local machine only.
 
 - The API refuses to start with a missing, short or default signing secret. Docker now uses the secrets the installer creates, instead of fixed values.
 - The Docker database port is now reachable only from the same machine.

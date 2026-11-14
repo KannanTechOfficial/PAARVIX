@@ -7,9 +7,20 @@
 
 @use 'styles/variables' as *;
 
+// Brand fonts, served from Paarvix itself so they also work offline and on a campus network.
+// Each file covers a set of characters and is only downloaded when a page uses them.
+@import '@fontsource-variable/inter/index.css';
+@import '@fontsource-variable/jetbrains-mono/index.css';
+@import '@fontsource/poppins/600.css';
+@import '@fontsource/poppins/700.css';
+
 // Workspace tokens read --pvx-ws-* first: those come from the saved theme (layer 1).
 // Without a theme, or inside the Administration area, the brand defaults apply.
+//
+// Light: crisp and quiet (hairlines, soft shadows, neutral chrome; brand colour where it matters).
+// Dark: deep near-black with surfaces lifted by faint light edges; one blue-to-teal accent, used sparingly.
 :root {
+  color-scheme: light;
   --pvx-brand-primary: #{$pvx-deep-blue};
   --pvx-brand-accent: #{$pvx-teal};
   --pvx-brand-warn: #{$pvx-orange};
@@ -17,32 +28,55 @@
   --pvx-primary: var(--pvx-ws-primary, var(--pvx-brand-primary));
   --pvx-accent: var(--pvx-ws-accent, var(--pvx-brand-accent));
   --pvx-warn: var(--pvx-ws-warn, var(--pvx-brand-warn));
-  --pvx-radius: var(--pvx-ws-radius, #{$pvx-radius-md});
+  --pvx-radius: var(--pvx-ws-radius, 10px);
+  --pvx-radius-lg: calc(var(--pvx-radius) + 6px);
 
   --pvx-on-primary: #ffffff;
   --pvx-link: var(--pvx-primary);
-  --pvx-danger: #b91c1c;
-  --pvx-danger-bg: #fef2f2;
-  --pvx-success: #047857;
-  --pvx-success-bg: #ecfdf5;
-  --pvx-warn-text: #9a3412;
-  --pvx-warn-bg: #fff7ed;
-  --pvx-bg: #{$pvx-slate-50};
-  --pvx-bg-card: #ffffff;
-  --pvx-bg-sunken: #{$pvx-slate-100};
-  --pvx-bg-sidebar: #{$pvx-deep-blue};
-  --pvx-sidebar-text: #dbe4f7;
-  --pvx-sidebar-muted: #a9bce6;
-  --pvx-sidebar-hover: rgba(255, 255, 255, 0.1);
-  --pvx-text: #{$pvx-slate-900};
-  --pvx-text-muted: #{$pvx-slate-600};
-  --pvx-border: #{$pvx-slate-200};
-  --pvx-border-strong: #{$pvx-slate-300};
-  --pvx-focus: #{$pvx-orange};
+  --pvx-accent-gradient: linear-gradient(135deg, #2F5BEA 0%, #14B8A6 100%);
+
+  // Meaning, not decoration: green when a change is good, red when it is bad.
+  --pvx-good: #0B8A5B;
+  --pvx-good-bg: #E7F6EF;
+  --pvx-bad: #D33A3F;
+  --pvx-bad-bg: #FDECEC;
+  --pvx-danger: #C9363B;
+  --pvx-danger-bg: #FDECEC;
+  --pvx-success: #0B8A5B;
+  --pvx-success-bg: #E7F6EF;
+  --pvx-warn-text: #9A3A0B;
+  --pvx-warn-bg: #FFF3E8;
+
+  --pvx-bg: #F5F6F8;
+  --pvx-bg-card: #FFFFFF;
+  --pvx-bg-sunken: #EEF0F3;
+  --pvx-bg-raised: #FFFFFF;
+  --pvx-text: #0C1220;
+  --pvx-text-muted: #5A6375;
+  --pvx-text-faint: #8A92A2;
+  --pvx-border: #E4E7EC;
+  --pvx-border-strong: #D2D7DF;
+  --pvx-card-edge: 0 0 0 1px rgba(12, 18, 32, 0.04);
+  --pvx-shadow-sm: 0 1px 2px rgba(12, 18, 32, 0.04), 0 1px 3px rgba(12, 18, 32, 0.05);
+  --pvx-shadow-md: 0 1px 2px rgba(12, 18, 32, 0.04), 0 6px 16px -4px rgba(12, 18, 32, 0.08);
+  --pvx-shadow-lg: 0 2px 6px rgba(12, 18, 32, 0.05), 0 24px 48px -12px rgba(12, 18, 32, 0.18);
+
+  // Chrome: a quiet sidebar; the brand shows in the mark and the active item.
+  --pvx-bg-sidebar: #FBFBFC;
+  --pvx-sidebar-border: #E9EBEF;
+  --pvx-sidebar-text: #3B4354;
+  --pvx-sidebar-muted: #8A92A2;
+  --pvx-sidebar-hover: #F0F2F5;
+  --pvx-sidebar-active-bg: #FFFFFF;
+  --pvx-sidebar-active-text: var(--pvx-brand-primary);
+  --pvx-sidebar-active-shadow: 0 1px 2px rgba(12, 18, 32, 0.06), 0 0 0 1px rgba(12, 18, 32, 0.05);
+
+  --pvx-focus: #F97316;
   --pvx-font-ui: #{$pvx-font-ui};
   --pvx-font-code: #{$pvx-font-code};
   --pvx-font-brand: #{$pvx-font-marketing};
   --pvx-row: 44px;
+  --pvx-ease: cubic-bezier(.16, 1, .3, 1);
 }
 
 [data-density='compact'] {
@@ -50,30 +84,58 @@
 }
 
 [data-theme='dark'] {
-  --pvx-link: #93b4f5;
-  --pvx-danger: #fca5a5;
-  --pvx-danger-bg: rgba(239, 68, 68, 0.12);
-  --pvx-success: #6ee7b7;
-  --pvx-success-bg: rgba(16, 185, 129, 0.12);
-  --pvx-warn-text: #fdba74;
+  color-scheme: dark;
+  // Deep blue disappears on black, so dark mode uses a brighter blue of the same family.
+  --pvx-primary: var(--pvx-ws-primary-dark, #5B8CFF);
+  --pvx-on-primary: #FFFFFF;
+  --pvx-link: #9CB8FF;
+  --pvx-accent-gradient: linear-gradient(135deg, #5B8CFF 0%, #2DD4BF 100%);
+
+  --pvx-good: #34D399;
+  --pvx-good-bg: rgba(52, 211, 153, 0.12);
+  --pvx-bad: #FF7A7F;
+  --pvx-bad-bg: rgba(255, 122, 127, 0.12);
+  --pvx-danger: #FF8A8E;
+  --pvx-danger-bg: rgba(255, 122, 127, 0.12);
+  --pvx-success: #34D399;
+  --pvx-success-bg: rgba(52, 211, 153, 0.12);
+  --pvx-warn-text: #FDBA74;
   --pvx-warn-bg: rgba(249, 115, 22, 0.12);
-  --pvx-bg: #{$pvx-slate-950};
-  --pvx-bg-card: #{$pvx-slate-900};
-  --pvx-bg-sunken: #{$pvx-slate-800};
-  --pvx-bg-sidebar: #0b1a45;
-  --pvx-text: #{$pvx-slate-100};
-  --pvx-text-muted: #{$pvx-slate-400};
-  --pvx-border: #{$pvx-slate-700};
-  --pvx-border-strong: #{$pvx-slate-600};
+
+  --pvx-bg: #06080D;
+  --pvx-bg-card: #0E121A;
+  --pvx-bg-sunken: #151A24;
+  --pvx-bg-raised: #131824;
+  --pvx-text: #EEF1F6;
+  --pvx-text-muted: #9098A9;
+  --pvx-text-faint: #6B7385;
+  --pvx-border: #1D2330;
+  --pvx-border-strong: #2A3242;
+  // Surfaces are lifted by a faint top highlight and a hairline, not by shadows that vanish on black.
+  --pvx-card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --pvx-shadow-sm: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --pvx-shadow-md: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.07), 0 12px 32px -8px rgba(0, 0, 0, 0.6);
+  --pvx-shadow-lg: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.08), 0 32px 64px -16px rgba(0, 0, 0, 0.8);
+
+  --pvx-bg-sidebar: #090C13;
+  --pvx-sidebar-border: #161B26;
+  --pvx-sidebar-text: #B8C0CF;
+  --pvx-sidebar-muted: #6B7385;
+  --pvx-sidebar-hover: #121722;
+  --pvx-sidebar-active-bg: #161C29;
+  --pvx-sidebar-active-text: #FFFFFF;
+  --pvx-sidebar-active-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.07);
 }
 
 // The Administration area never takes the custom theme (theme safety rule 3).
 .pvx-admin-area {
   --pvx-primary: var(--pvx-brand-primary);
+  --pvx-ws-primary-dark: #5B8CFF;
   --pvx-accent: var(--pvx-brand-accent);
   --pvx-warn: var(--pvx-brand-warn);
-  --pvx-radius: #{$pvx-radius-md};
+  --pvx-radius: 10px;
 }
+[data-theme='dark'] .pvx-admin-area { --pvx-primary: #5B8CFF; }
 
 *,
 *::before,
@@ -91,6 +153,9 @@ html {
 
 body {
   font-family: var(--pvx-font-ui);
+  // Inter's straighter 1, open digits and tabular figures make numbers read like a product, not a document.
+  font-feature-settings: 'cv11', 'ss01';
+  text-rendering: optimizeLegibility;
   background-color: var(--pvx-bg);
   color: var(--pvx-text);
   line-height: 1.5;
@@ -142,22 +207,29 @@ td.num {
   padding: 0 16px;
   border-radius: var(--pvx-radius);
   border: 1px solid var(--pvx-border-strong);
-  background: var(--pvx-bg-card);
+  background: var(--pvx-bg-raised);
   color: var(--pvx-text);
   font: 600 14px/1 var(--pvx-font-ui);
+  letter-spacing: -0.005em;
+  box-shadow: 0 1px 2px rgba(12, 18, 32, 0.05);
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color 120ms ease-out, border-color 120ms ease-out;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out, transform 120ms ease-out;
+  -webkit-tap-highlight-color: transparent;
 
   &:hover:not(:disabled) { background: var(--pvx-bg-sunken); text-decoration: none; }
+  // Pressed buttons give way slightly under the finger, as native controls do.
+  &:active:not(:disabled) { transform: scale(.97); }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 
   &.primary {
     background: var(--pvx-primary);
-    border-color: var(--pvx-primary);
+    border-color: transparent;
     color: var(--pvx-on-primary);
-    &:hover:not(:disabled) { background: color-mix(in srgb, var(--pvx-primary) 85%, #000); }
+    // A faint top light gives the main action a pressed-glass finish.
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 1px 2px rgba(12, 18, 32, 0.15), 0 2px 8px -2px color-mix(in srgb, var(--pvx-primary) 45%, transparent);
+    &:hover:not(:disabled) { background: color-mix(in srgb, var(--pvx-primary) 88%, #000); }
   }
 
   &.danger {
@@ -169,6 +241,7 @@ td.num {
   &.ghost {
     border-color: transparent;
     background: transparent;
+    box-shadow: none;
     &:hover:not(:disabled) { background: var(--pvx-bg-sunken); }
   }
 
@@ -190,13 +263,16 @@ td.num {
   padding: 0 12px;
   border: 1px solid var(--pvx-border-strong);
   border-radius: var(--pvx-radius);
-  background: var(--pvx-bg-card);
+  background: var(--pvx-bg-raised);
   color: var(--pvx-text);
   font: 14px var(--pvx-font-ui);
   width: 100%;
+  box-shadow: inset 0 1px 1px rgba(12, 18, 32, 0.03);
+  transition: border-color 140ms ease-out, box-shadow 140ms ease-out;
 
-  &::placeholder { color: var(--pvx-text-muted); }
-  &:focus-visible { outline-offset: 0; border-color: var(--pvx-primary); }
+  &::placeholder { color: var(--pvx-text-faint); }
+  &:hover:not(:disabled) { border-color: color-mix(in srgb, var(--pvx-border-strong) 60%, var(--pvx-text-muted)); }
+  &:focus-visible { outline: none; border-color: var(--pvx-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pvx-primary) 22%, transparent); }
 }
 
 .pvx-check {
@@ -222,22 +298,24 @@ td.num {
   gap: 16px;
   margin-bottom: 24px;
 
-  h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
-  p { color: var(--pvx-text-muted); font-size: 14px; margin-top: 4px; max-width: 70ch; }
+  h1 { font: 700 28px/1.15 var(--pvx-font-brand); letter-spacing: -0.02em; }
+  p { color: var(--pvx-text-muted); font-size: 14px; margin-top: 6px; max-width: 70ch; }
   .actions { margin-left: auto; display: flex; gap: 8px; }
 }
 
 .pvx-panel {
   background: var(--pvx-bg-card);
-  border: 1px solid var(--pvx-border);
-  border-radius: var(--pvx-radius);
+  border: 0;
+  border-radius: var(--pvx-radius-lg);
+  box-shadow: var(--pvx-shadow-sm);
 }
 
 .pvx-table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--pvx-border);
-  border-radius: var(--pvx-radius);
+  border: 0;
+  border-radius: var(--pvx-radius-lg);
   background: var(--pvx-bg-card);
+  box-shadow: var(--pvx-shadow-sm);
 }
 
 .pvx-table {
@@ -250,9 +328,9 @@ td.num {
     font-size: 12px;
     font-weight: 600;
     color: var(--pvx-text-muted);
-    padding: 10px 16px;
+    padding: 12px 16px;
     border-bottom: 1px solid var(--pvx-border);
-    background: var(--pvx-bg-sunken);
+    background: transparent;
     white-space: nowrap;
   }
 
@@ -264,6 +342,8 @@ td.num {
   }
 
   tr:last-child td { border-bottom: 0; }
+  tbody tr { transition: background-color 120ms ease-out; }
+  tbody tr:hover td { background: color-mix(in srgb, var(--pvx-bg-sunken) 55%, transparent); }
   tr.inactive td { color: var(--pvx-text-muted); }
 }
 
@@ -309,3 +389,15 @@ td.num {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .pvx-btn:active:not(:disabled) { transform: none; }
+}
+
+// ---------- Native polish ----------
+html { -webkit-tap-highlight-color: transparent; }
+body { background: var(--pvx-bg); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--pvx-border-strong); border-radius: 10px; border: 3px solid var(--pvx-bg); }
+::-webkit-scrollbar-track { background: transparent; }
+* { scrollbar-color: var(--pvx-border-strong) transparent; }

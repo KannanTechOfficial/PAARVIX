@@ -1,0 +1,193 @@
+<!--
+  Paarvix — See your data clearly.
+  Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+  Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+  Commercial licenses: support@kannantech.com
+-->
+<div class="page" [class.locked]="auth.user()?.locked">
+  @if (error()) { <p class="pvx-note error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="pvx-note ok" role="status">{{ notice() }}</p> }
+
+  @if (dashboard(); as d) {
+    @if (asRole()) {
+      <div class="preview-bar" role="status">
+        <span>{{ 'dashboards.previewing' | translate: { role: previewRoleName() } }}</span>
+        <button type="button" class="pvx-btn small" (click)="previewAs('')">{{ 'dashboards.stopPreview' | translate }}</button>
+      </div>
+    }
+
+    <header class="pvx-page-head">
+      <div>
+        @if (editing()) {
+          <label class="pvx-sr-only" for="d-title">{{ 'dashboards.title' | translate }}</label>
+          <input id="d-title" class="pvx-input title-input" [(ngModel)]="title" maxlength="120" />
+        } @else {
+          <h1 #pageTitle>{{ d.title }}</h1>
+          @if (d.description) { <p>{{ d.description }}</p> }
+        }
+      </div>
+      <div class="actions">
+        @if (editing()) {
+          <button type="button" class="pvx-btn" (click)="addPanel()"><pvx-icon name="plus" [size]="18" />{{ 'dashboards.addPanel' | translate }}</button>
+          <button type="button" class="pvx-btn" [class.primary]="showSettings()" (click)="showSettings.set(!showSettings())">
+            <pvx-icon name="access" [size]="18" />{{ 'dashboards.whoCanView' | translate }}</button>
+          <button type="button" class="pvx-btn ghost" (click)="cancelEdit()">{{ 'common.cancel' | translate }}</button>
+          <button type="button" class="pvx-btn primary" (click)="save()" [disabled]="saving() || title.trim().length < 2">{{ 'common.save' | translate }}</button>
+        } @else {
+          @if (canPreview() && roles().length) {
+            <label class="pvx-sr-only" for="d-as">{{ 'dashboards.viewAs' | translate }}</label>
+            <select id="d-as" class="pvx-select as" [ngModel]="asRole() ?? ''" (ngModelChange)="previewAs($event)">
+              <option value="">{{ 'dashboards.viewAsMe' | translate }}</option>
+              <optgroup [label]="'dashboards.roles' | translate">
+                @for (r of roles(); track r.id) { <option [value]="r.id">{{ 'dashboards.viewAsRole' | translate: { role: r.name } }}</option> }
+              </optgroup>
+              @if (people().length) {
+                <optgroup [label]="'dashboards.people' | translate">
+                  @for (u of people(); track u.id) { <option [value]="'user:' + u.id">{{ u.name }} · {{ u.email }}</option> }
+                </optgroup>
+              }
+            </select>
+          }
+          <button type="button" class="pvx-btn icon-only" (click)="refresh()" [attr.aria-label]="'dashboards.refresh' | translate" [attr.title]="'dashboards.refresh' | translate">
+            <pvx-icon name="refresh" [size]="18" /></button>
+          <a class="pvx-btn icon-only tv" [routerLink]="['/tv', d.id]" [attr.aria-label]="'dashboards.tv' | translate" [attr.title]="'dashboards.tv' | translate">
+            <pvx-icon name="tv" [size]="18" /></a>
+          @if (d.canEdit && !asRole()) {
+            <button type="button" class="pvx-btn primary" (click)="startEdit()">{{ 'dashboards.edit' | translate }}</button>
+          }
+        }
+      </div>
+    </header>
+
+    @if (editing()) {
+      @if (showSettings()) {
+        <section class="pvx-panel settings">
+          <label class="pvx-field"><span>{{ 'dashboards.description' | translate }}</span>
+            <input class="pvx-input" [(ngModel)]="description" maxlength="300" /></label>
+          <fieldset>
+            <legend>{{ 'dashboards.sections' | translate }}</legend>
+            <p class="hint">{{ 'dashboards.sectionsHint' | translate }}</p>
+            <div class="section-list">
+              @for (sec of sections(); track sec.id; let i = $index) {
+                <div class="section-row">
+                  <input class="pvx-input" [ngModel]="sec.title" (ngModelChange)="renameSection(sec.id, $event)" maxlength="60"
+                    [placeholder]="'dashboards.sectionN' | translate: { n: i + 1 }" [attr.aria-label]="'dashboards.sectionName' | translate" />
+                  @if (sections().length > 1) {
+                    <button type="button" class="pvx-btn small ghost" (click)="removeSection(sec.id)" [attr.aria-label]="'dashboards.removeSection' | translate"><pvx-icon name="close" [size]="16" /></button>
+                  }
+                </div>
+              }
+              <button type="button" class="pvx-btn small" (click)="addSection()"><pvx-icon name="plus" [size]="16" />{{ 'dashboards.addSection' | translate }}</button>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>{{ 'dashboards.whoCanView' | translate }}</legend>
+            <p class="hint">{{ 'dashboards.whoHint' | translate }}</p>
+            <div class="role-list">
+              @for (r of roles(); track r.id) {
+                <label class="pvx-check"><input type="checkbox" [checked]="roleIds.has(r.id)" (change)="toggleRole(r.id, $any($event.target).checked)" />
+                  <span>{{ r.name }}</span></label>
+              }
+            </div>
+          </fieldset>
+          <button type="button" class="pvx-btn danger small" (click)="deleteDashboard()">{{ 'dashboards.delete' | translate }}</button>
+        </section>
+      }
+
+      <div class="edit-layout">
+        <div class="canvas">
+          @if (items().length === 0) {
+            <div class="pvx-empty pvx-panel">
+              <p>{{ 'dashboards.emptyEdit' | translate }}</p>
+              @if (!savedQueries().length) { <p><a routerLink="/queries">{{ 'dashboards.makeQuery' | translate }}</a></p> }
+            </div>
+          }
+          <gridster [options]="gridOptions" class="grid-edit">
+            @for (item of items(); track item.panel.id) {
+              <gridster-item [item]="item" [class.selected]="selected() === item.panel.id">
+                <div class="drag" [attr.aria-label]="'dashboards.dragHint' | translate" (click)="selected.set(item.panel.id)"><pvx-icon name="menu" [size]="16" /></div>
+                <pvx-panel [dashboardId]="d.id" [panel]="item.panel" [editing]="true"
+                  (edit)="selected.set(item.panel.id)" (remove)="removePanel(item.panel.id)" />
+              </gridster-item>
+            }
+          </gridster>
+        </div>
+
+        @if (selectedItem(); as s) {
+          <aside class="pvx-panel inspector" [attr.aria-label]="'dashboards.panelSettings' | translate">
+            <div class="ins-head">
+              <h2>{{ 'dashboards.panelSettings' | translate }}</h2>
+              <button type="button" class="pvx-btn small ghost" (click)="selected.set(null)" [attr.aria-label]="'common.cancel' | translate"><pvx-icon name="close" [size]="16" /></button>
+            </div>
+            <label class="pvx-field"><span>{{ 'dashboards.panelTitle' | translate }}</span>
+              <input class="pvx-input" [ngModel]="s.panel.title" (ngModelChange)="updatePanel(s.panel.id, { title: $event })" maxlength="100" /></label>
+            <label class="pvx-field"><span>{{ 'dashboards.role' | translate }}</span>
+              <select class="pvx-select" [ngModel]="s.panel.role" (ngModelChange)="updatePanel(s.panel.id, { role: $event })">
+                @for (r of roles_; track r) { <option [value]="r">{{ 'dashboards.roles_.' + r | translate }}</option> }
+              </select>
+              <small>{{ 'dashboards.roleHint.' + (s.panel.role ?? 'supporting') | translate }}</small></label>
+            @if (sections().length > 1) {
+              <label class="pvx-field"><span>{{ 'dashboards.section' | translate }}</span>
+                <select class="pvx-select" [ngModel]="s.panel.section" (ngModelChange)="updatePanel(s.panel.id, { section: $event })">
+                  @for (sec of sections(); track sec.id; let i = $index) { <option [value]="sec.id">{{ sec.title || ('dashboards.sectionN' | translate: { n: i + 1 }) }}</option> }
+                </select></label>
+            }
+            <div class="pvx-field">
+              <span>{{ 'dashboards.showAs' | translate }}</span>
+              <div class="viz">
+                @for (v of vizTypes; track v) {
+                  <button type="button" class="pvx-btn small" [class.primary]="s.panel.viz.type === v" (click)="setVizType(s.panel.id, v)" [attr.aria-pressed]="s.panel.viz.type === v">
+                    {{ 'dashboards.viz.' + v | translate }}</button>
+                }
+              </div>
+            </div>
+            @if (s.panel.viz.type === 'text') {
+              <label class="pvx-field"><span>{{ 'dashboards.text' | translate }}</span>
+                <textarea class="pvx-input area" [ngModel]="s.panel.viz.text" (ngModelChange)="updatePanel(s.panel.id, {}, { text: $event })" maxlength="2000"></textarea></label>
+            } @else {
+              <label class="pvx-field"><span>{{ 'dashboards.query' | translate }}</span>
+                <select class="pvx-select" [ngModel]="s.panel.queryId" (ngModelChange)="updatePanel(s.panel.id, { queryId: $event })">
+                  @for (q of savedQueries(); track q.id) { <option [value]="q.id">{{ q.name }} · {{ q.datasource.name }}</option> }
+                </select>
+                @if (!savedQueries().length) { <small><a routerLink="/queries">{{ 'dashboards.makeQuery' | translate }}</a></small> }
+              </label>
+              @if (s.panel.viz.type !== 'table') {
+                <label class="pvx-field"><span>{{ 'dashboards.valueColumn' | translate }}</span>
+                  <input class="pvx-input" [ngModel]="s.panel.viz.value" (ngModelChange)="updatePanel(s.panel.id, {}, { value: $event })"
+                    [placeholder]="'dashboards.auto' | translate" maxlength="100" /></label>
+              }
+              @if (s.panel.viz.type === 'bar' || s.panel.viz.type === 'line' || s.panel.viz.type === 'pie') {
+                <label class="pvx-field"><span>{{ 'dashboards.labelColumn' | translate }}</span>
+                  <input class="pvx-input" [ngModel]="s.panel.viz.label" (ngModelChange)="updatePanel(s.panel.id, {}, { label: $event })"
+                    [placeholder]="'dashboards.auto' | translate" maxlength="100" /></label>
+              }
+              @if (s.panel.viz.type === 'kpi') {
+                <label class="pvx-field"><span>{{ 'dashboards.goodWhen' | translate }}</span>
+                  <select class="pvx-select" [ngModel]="s.panel.viz.goodWhen ?? ''" (ngModelChange)="updatePanel(s.panel.id, {}, { goodWhen: $event || undefined })">
+                    <option value="">{{ 'dashboards.goodNeutral' | translate }}</option>
+                    <option value="up">{{ 'dashboards.goodUp' | translate }}</option>
+                    <option value="down">{{ 'dashboards.goodDown' | translate }}</option>
+                  </select></label>
+                <label class="pvx-field"><span>{{ 'dashboards.unit' | translate }}</span>
+                  <input class="pvx-input" [ngModel]="s.panel.viz.unit" (ngModelChange)="updatePanel(s.panel.id, {}, { unit: $event })" maxlength="8" placeholder="%, ₹" /></label>
+              }
+            }
+            <button type="button" class="pvx-btn danger small" (click)="removePanel(s.panel.id)">{{ 'dashboards.removePanel' | translate }}</button>
+          </aside>
+        }
+      </div>
+    } @else {
+      @if (panels().length === 0) {
+        <div class="pvx-empty">
+          <p>{{ 'dashboards.emptyView' | translate }}</p>
+          @if (d.canEdit && !asRole()) { <button type="button" class="pvx-btn primary" (click)="startEdit()">{{ 'dashboards.edit' | translate }}</button> }
+        </div>
+      } @else {
+        <!-- Composed for the screen it is on: see dashboard-canvas. -->
+        <pvx-dashboard-canvas [dashboardId]="d.id" [config]="d.config" [asRole]="asRole()" [refreshKey]="refreshKey()" (refresh)="refresh()" />
+      }
+    }
+  } @else if (!error()) {
+    <p class="pvx-empty">{{ 'common.loading' | translate }}</p>
+  }
+</div>

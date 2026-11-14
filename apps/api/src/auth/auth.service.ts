@@ -21,6 +21,15 @@ import { requireSecret } from './require-secret';
 import { SUPER_ADMIN } from '@paarvix/shared';
 import { RolesService } from '../access/roles.service';
 import { LoginThrottleService } from './login-throttle.service';
+import { SessionsService, type SessionMeta, type SessionMethod } from './sessions.service';
+
+/** What a refresh token carries: who, which session, and the session's current one-time id. */
+interface RefreshPayload {
+  sub: string;
+  sid?: string;
+  jti?: string;
+  typ?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -34,9 +43,10 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly roles: RolesService,
     private readonly throttle: LoginThrottleService,
+    private readonly sessions: SessionsService,
   ) {}
 
-  async setup(dto: SetupDto) {
+  async setup(dto: SetupDto, meta: SessionMeta = {}) {
     const existingUsers = await this.prisma.user.count();
     if (existingUsers > 0) {
       throw new ConflictException('Setup already completed');
@@ -57,10 +67,10 @@ export class AuthService {
     });
 
     this.logger.log(`Super Admin created: ${user.email}`);
-    return this.issue(user.id);
+    return this.issue(user.id, 'setup', meta);
   }
 
-  async login(dto: LoginDto, ip: string) {
+  async login(dto: LoginDto, ip: string, userAgent?: string) {
     const email = String(dto.email ?? '').trim();
     this.throttle.assertAllowed(email, ip);
     // Emails are matched without case, so "Kannan@…" and "kannan@…" are the same account.
@@ -78,7 +88,7 @@ export class AuthService {
     this.throttle.recordSuccess(email, ip);
 
     this.logger.log(`User logged in: ${user.email}`);
-    return this.issue(user.id);
+    return this.issue(user.id, 'password', { ip, userAgent });
   }
 
   async isSetupRequired(): Promise<boolean> {
@@ -93,37 +103,61 @@ export class AuthService {
     return user;
   }
 
-  /** Refuses a user with no usable role, so an account cannot sign in with zero permissions by accident. */
-  async issue(userId: string) {
+  /**
+   * Signs someone in: starts a server-side session and returns its first token pair.
+   * Refuses a user with no usable role, so an account cannot sign in with zero permissions by accident.
+   */
+  async issue(userId: string, method: SessionMethod, meta: SessionMeta = {}) {
     const user = await this.roles.resolve(userId);
     if (!user) throw new UnauthorizedException('Invalid credentials');
-    const { sessionVersion } = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { sessionVersion: true } });
-    const payload = { sub: user.id, email: user.email };
-
-    const accessToken = this.jwt.sign(payload);
-    const refreshToken = this.jwt.sign({ ...payload, sv: sessionVersion, typ: 'refresh' }, {
-      secret: requireSecret(this.config, 'JWT_REFRESH_SECRET'),
-      expiresIn: (this.config.get<string>('JWT_REFRESH_EXPIRY', '7d') as any),
-    });
-
-    return { accessToken, refreshToken, user };
+    const { sessionId, tokenId } = await this.sessions.create(user.id, method, meta);
+    return { ...this.sign(user.id, user.email, sessionId, tokenId), user };
   }
 
   /**
-   * Swaps a valid refresh token for a new pair. Refused once the account is inactive,
-   * or after a password reset or deactivation raised its session version.
+   * Swaps a refresh token for a new pair in the same session. Refused once the session has ended
+   * (signed out, password reset, deactivated, ended from another device) or the account is inactive.
+   * An old refresh token used again ends the session: see SessionsService.rotate.
    */
-  async refresh(token: string | undefined) {
-    if (!token) throw new UnauthorizedException('Please sign in again');
-    let payload: { sub: string; sv?: number; typ?: string };
-    try {
-      payload = this.jwt.verify(token, { secret: requireSecret(this.config, 'JWT_REFRESH_SECRET') });
-    } catch {
+  async refresh(token: string | undefined, meta: SessionMeta = {}) {
+    const payload = this.readRefresh(token, false);
+    // Tokens from before server-side sessions name no session; they must sign in once more.
+    if (!payload?.sid || !payload.jti) throw new UnauthorizedException('Please sign in again');
+    const user = await this.roles.resolve(payload.sub);
+    if (!user) {
+      await this.sessions.revoke(payload.sid, 'deactivated');
       throw new UnauthorizedException('Please sign in again');
     }
-    if (payload.typ !== 'refresh') throw new UnauthorizedException('Please sign in again');
-    const user = await this.prisma.user.findUnique({ where: { id: payload.sub }, select: { isActive: true, sessionVersion: true } });
-    if (!user || !user.isActive || user.sessionVersion !== payload.sv) throw new UnauthorizedException('Please sign in again');
-    return this.issue(payload.sub);
+    const next = await this.sessions.rotate(payload.sid, user.id, payload.jti, meta);
+    return { ...this.sign(user.id, user.email, payload.sid, next), user };
+  }
+
+  /**
+   * Ends the session a refresh token belongs to. An expired token still names its session, so it is
+   * read without the expiry check; the signature is still verified, so nobody can end another person's session.
+   */
+  async logout(token: string | undefined) {
+    const payload = this.readRefresh(token, true);
+    if (payload?.sid) await this.sessions.revoke(payload.sid, 'signed_out');
+  }
+
+  private readRefresh(token: string | undefined, ignoreExpiration: boolean): RefreshPayload | null {
+    if (!token) return null;
+    try {
+      const p = this.jwt.verify<RefreshPayload>(token, { secret: requireSecret(this.config, 'JWT_REFRESH_SECRET'), ignoreExpiration });
+      return p.typ === 'refresh' ? p : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private sign(userId: string, email: string, sessionId: string, tokenId: string) {
+    // Both tokens name the session, so ending it stops the 15-minute access token as well, not just renewal.
+    const accessToken = this.jwt.sign({ sub: userId, email, sid: sessionId });
+    const refreshToken = this.jwt.sign(
+      { sub: userId, sid: sessionId, jti: tokenId, typ: 'refresh' },
+      { secret: requireSecret(this.config, 'JWT_REFRESH_SECRET'), expiresIn: Math.floor(this.sessions.idleMs / 1000) },
+    );
+    return { accessToken, refreshToken };
   }
 }

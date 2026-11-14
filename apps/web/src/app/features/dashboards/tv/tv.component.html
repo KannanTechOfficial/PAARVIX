@@ -1,0 +1,73 @@
+<!--
+  Paarvix — See your data clearly.
+  Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+  Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+  Commercial licenses: support@kannantech.com
+-->
+<div class="tv">
+  <header class="top">
+    <div class="ident">
+      <span class="org">{{ theme.orgName() }}</span>
+      <h1>{{ dashboard()?.title }}</h1>
+    </div>
+    @if (screen()?.title) { <p class="section">{{ screen()!.title }}</p> }
+    <div class="meta">
+      <span class="clock pvx-num">{{ clock() }}</span>
+      @if (dataTime()) { <span class="data-time pvx-num">{{ 'dashboards.tvUpdated' | translate: { time: dataTime() } }}</span> }
+    </div>
+  </header>
+
+  @if (stale()) {
+    <p class="stale" role="alert">{{ 'dashboards.tvStale' | translate: { time: dataTime() || '—' } }}</p>
+  }
+
+  @if (error()) {
+    <p class="message" role="alert">{{ error() }}</p>
+  } @else if (dashboard(); as d) {
+    @if (screen(); as s) {
+      <main class="screen" [class.has-headlines]="s.headlines.length" [class.no-charts]="!s.charts.length && !s.detail">
+        @if (s.headlines.length) {
+          <div class="headlines" [style.--n]="s.headlines.length">
+            @for (p of s.headlines; track p.id) {
+              <pvx-viewer-panel [dashboardId]="d.id" [panel]="p" layout="wall" [refreshKey]="refreshKey()" (loaded)="onLoaded($event)" />
+            }
+          </div>
+        }
+        @if (s.charts.length) {
+          <div class="charts" [style.--n]="s.charts.length">
+            @for (p of s.charts; track p.id) {
+              <pvx-viewer-panel [dashboardId]="d.id" [panel]="p" layout="wall" [refreshKey]="refreshKey()" (loaded)="onLoaded($event)" />
+            }
+          </div>
+        } @else if (s.detail) {
+          <div class="charts">
+            <pvx-viewer-panel [dashboardId]="d.id" [panel]="s.detail" layout="wall" [refreshKey]="refreshKey()" (loaded)="onLoaded($event)" />
+          </div>
+        }
+      </main>
+    } @else {
+      <p class="message">{{ 'dashboards.emptyView' | translate }}</p>
+    }
+  } @else {
+    <p class="message">{{ 'common.loading' | translate }}</p>
+  }
+
+  @if (screens().length > 1) {
+    <div class="progress" aria-hidden="true"><span [style.transform]="'scaleX(' + progress() + ')'"></span></div>
+    <ol class="dots" aria-hidden="true">
+      @for (s of screens(); track $index) { <li [class.on]="$index === index() % screens().length"></li> }
+    </ol>
+  }
+
+  <!-- Controls appear when the pointer moves, and fade when the room is just watching. -->
+  <nav class="controls" [attr.aria-label]="'dashboards.tvControls' | translate">
+    @if (screens().length > 1) {
+      <button type="button" (click)="go(-1)" [attr.aria-label]="'dashboards.tvPrev' | translate"><pvx-icon name="back" [size]="28" /></button>
+    }
+    <button type="button" (click)="fullscreen()">{{ 'dashboards.tvFullscreen' | translate }}</button>
+    <a [routerLink]="['/d', dashboard()?.id]">{{ 'dashboards.tvExit' | translate }}</a>
+    @if (screens().length > 1) {
+      <button type="button" class="next" (click)="go(1)" [attr.aria-label]="'dashboards.tvNext' | translate"><pvx-icon name="back" [size]="28" /></button>
+    }
+  </nav>
+</div>

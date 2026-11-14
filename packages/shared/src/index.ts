@@ -66,3 +66,5 @@ export interface SchemaMetadata {
     columns: DataFrameColumn[];
   }>;
 }
+export * from './describe-sql';
+export * from './dashboard';

@@ -11,6 +11,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { AdminApiService, type AdminUser, type Role, errorText } from '../../core/services/admin-api.service';
 import { AuthService } from '../../core/services/auth.service';
+import { DashboardsApiService, type DashboardItem } from '../../core/services/dashboards-api.service';
 import { IconComponent } from '../../core/ui/icon.component';
 
 interface Draft { name: string; email: string; password: string; roleId: string; language: string; department: string }
@@ -78,6 +79,8 @@ const emptyDraft = (roleId = ''): Draft => ({ name: '', email: '', password: '',
             <th scope="col">{{ 'admin.users.name' | translate }}</th>
             <th scope="col">{{ 'admin.users.role' | translate }}</th>
             <th scope="col">{{ 'admin.users.department' | translate }}</th>
+            <th scope="col">{{ 'admin.users.home' | translate }}</th>
+            <th scope="col">{{ 'admin.users.attributes' | translate }}</th>
             <th scope="col">{{ 'admin.users.status' | translate }}</th>
             @if (canWrite()) { <th scope="col"><span class="pvx-sr-only">{{ 'admin.actions' | translate }}</span></th> }
           </tr></thead>
@@ -104,6 +107,26 @@ const emptyDraft = (roleId = ''): Draft => ({ name: '', email: '', password: '',
                 </td>
                 <td>{{ u.department || '—' }}</td>
                 <td>
+                  @if (canWrite() && editable(u)) {
+                    <label class="pvx-sr-only" [for]="'home-' + u.id">{{ 'admin.users.home' | translate }}</label>
+                    <select class="pvx-select inline" [id]="'home-' + u.id" [ngModel]="u.homeDashboardId ?? ''" (ngModelChange)="changeHome(u, $event)" [disabled]="busy()">
+                      <option value="">{{ 'admin.users.homeRole' | translate }}</option>
+                      @for (d of dashboards(); track d.id) { <option [value]="d.id">{{ d.title }}</option> }
+                    </select>
+                  } @else {
+                    {{ homeTitle(u) }}
+                  }
+                </td>
+                <td>
+                  @if (canWrite() && editable(u)) {
+                    <label class="pvx-sr-only" [for]="'attr-' + u.id">{{ 'admin.users.attributes' | translate }}</label>
+                    <input class="pvx-input attrs" [id]="'attr-' + u.id" [value]="attrText(u)" (change)="saveAttributes(u, $any($event.target).value)"
+                      [placeholder]="'admin.users.attributesHint' | translate" [disabled]="busy()" spellcheck="false" />
+                  } @else {
+                    <span class="attrs-text">{{ attrText(u) || '—' }}</span>
+                  }
+                </td>
+                <td>
                   @if (u.isActive) { <span class="pvx-tag ok">{{ 'admin.users.active' | translate }}</span> }
                   @else { <span class="pvx-tag">{{ 'admin.users.inactive' | translate }}</span> }
                 </td>
@@ -120,6 +143,8 @@ const emptyDraft = (roleId = ''): Draft => ({ name: '', email: '', password: '',
                         </form>
                       } @else {
                         <button class="pvx-btn small ghost" type="button" (click)="startReset(u)">{{ 'admin.users.resetPassword' | translate }}</button>
+                        <button class="pvx-btn small ghost" type="button" (click)="signOutEverywhere(u)" [disabled]="busy()"
+                          [attr.title]="'admin.users.signOutEverywhereHint' | translate">{{ 'admin.users.signOutEverywhere' | translate }}</button>
                         @if (u.id !== me()?.id) {
                           <button class="pvx-btn small" [class.danger]="u.isActive" type="button" (click)="toggleActive(u)" [disabled]="busy()">
                             {{ (u.isActive ? 'admin.users.deactivate' : 'admin.users.activate') | translate }}
@@ -131,7 +156,7 @@ const emptyDraft = (roleId = ''): Draft => ({ name: '', email: '', password: '',
                 }
               </tr>
             } @empty {
-              <tr><td colspan="5" class="pvx-empty">{{ (loading() ? 'common.loading' : 'admin.users.empty') | translate }}</td></tr>
+              <tr><td colspan="7" class="pvx-empty">{{ (loading() ? 'common.loading' : 'admin.users.empty') | translate }}</td></tr>
             }
           </tbody>
         </table>
@@ -151,12 +176,16 @@ const emptyDraft = (roleId = ''): Draft => ({ name: '', email: '', password: '',
     td.end .pvx-btn + .pvx-btn { margin-left: 6px; }
     .reset { display: inline-flex; gap: 6px; align-items: center; }
     .reset .pvx-input { min-height: 32px; width: 180px; }
+    .attrs { min-height: 34px; width: 210px; font: 13px var(--pvx-font-code); }
+    .attrs-text { font: 13px var(--pvx-font-code); color: var(--pvx-text-muted); }
   `],
 })
 export class UsersComponent implements OnInit {
   private readonly api = inject(AdminApiService);
   private readonly auth = inject(AuthService);
   private readonly t = inject(TranslateService);
+  private readonly dashApi = inject(DashboardsApiService);
+  readonly dashboards = signal<DashboardItem[]>([]);
 
   readonly users = signal<AdminUser[]>([]);
   readonly roles = signal<Role[]>([]);
@@ -179,6 +208,49 @@ export class UsersComponent implements OnInit {
 
   ngOnInit() {
     this.load();
+    this.dashApi.list().subscribe({ next: (d) => this.dashboards.set(d.filter((x) => !x.template)), error: () => undefined });
+  }
+
+  /** Shown and edited as "reg_no=912625104001, district=Madurai". */
+  attrText(u: AdminUser): string {
+    return Object.entries(u.attributes ?? {}).map(([k, v]) => `${k}=${v}`).join(', ');
+  }
+
+  saveAttributes(u: AdminUser, text: string) {
+    const attributes: Record<string, string> = {};
+    for (const part of text.split(',').map((p) => p.trim()).filter(Boolean)) {
+      const i = part.indexOf('=');
+      if (i < 1) {
+        this.notice.set('');
+        this.error.set(this.t.instant('admin.users.attributesBad', { part }));
+        return;
+      }
+      attributes[part.slice(0, i).trim()] = part.slice(i + 1).trim();
+    }
+    this.busy.set(true);
+    this.api.updateUser(u.id, { attributes }).subscribe({
+      next: (r) => this.done(this.t.instant('admin.users.attributesSaved', { name: r.name })),
+      error: (e) => {
+        this.fail(e);
+        this.load();
+      },
+    });
+  }
+
+  homeTitle(u: AdminUser): string {
+    return this.dashboards().find((d) => d.id === u.homeDashboardId)?.title ?? this.t.instant('admin.users.homeRole');
+  }
+
+  /** A personal home dashboard, overriding the role's. Empty follows the role. */
+  changeHome(u: AdminUser, dashboardId: string) {
+    this.busy.set(true);
+    this.api.updateUser(u.id, { homeDashboardId: dashboardId || null }).subscribe({
+      next: (r) => this.done(this.t.instant('admin.users.homeChanged', { name: r.name })),
+      error: (e) => {
+        this.fail(e);
+        this.load();
+      },
+    });
   }
 
   editable(u: AdminUser): boolean {
@@ -249,6 +321,15 @@ export class UsersComponent implements OnInit {
     this.busy.set(true);
     this.api.updateUser(u.id, { isActive: !u.isActive }).subscribe({
       next: (r) => this.done(this.t.instant(r.isActive ? 'admin.users.activated' : 'admin.users.deactivated', { name: r.name })),
+      error: (e) => this.fail(e),
+    });
+  }
+
+  /** For a lost phone or laptop: ends every session this person has, on the server. */
+  signOutEverywhere(u: AdminUser) {
+    this.busy.set(true);
+    this.api.revokeSessions(u.id).subscribe({
+      next: (r) => this.done(this.t.instant('admin.users.signedOutEverywhere', { name: u.name, count: r.ended })),
       error: (e) => this.fail(e),
     });
   }

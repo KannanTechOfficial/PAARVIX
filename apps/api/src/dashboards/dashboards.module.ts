@@ -8,8 +8,10 @@
 import { Module } from '@nestjs/common';
 import { DashboardsController } from './dashboards.controller';
 import { DashboardsService } from './dashboards.service';
+import { DatasourcesModule } from '../datasources/datasources.module';
 
 @Module({
+  imports: [DatasourcesModule],
   controllers: [DashboardsController],
   providers: [DashboardsService],
   exports: [DashboardsService],

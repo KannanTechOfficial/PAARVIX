@@ -17,6 +17,8 @@ export interface AdminUser {
   isActive: boolean;
   language: string;
   department: string | null;
+  homeDashboardId: string | null;
+  attributes: Record<string, string>;
   createdAt: string;
   assignedRole: RoleRef | null;
 }
@@ -29,6 +31,8 @@ export interface Role {
   permissions: string[];
   isSystem: boolean;
   userCount: number;
+  homeDashboardId: string | null;
+  lockToHome: boolean;
 }
 
 export interface PermissionCatalog {
@@ -39,6 +43,16 @@ export interface PermissionCatalog {
 export interface AccessMatrix {
   roles: { id: string; key: string; name: string; isSystem: boolean; alwaysAllowed: boolean; canQuery: boolean }[];
   sources: { id: string; name: string; type: string; roleIds: string[] }[];
+}
+
+export interface RowRule {
+  id: string;
+  datasourceId: string;
+  roleId: string;
+  column: string;
+  attribute: string;
+  datasource: { name: string };
+  role: { name: string; key: string };
 }
 
 export interface ConnectorInfo { type: string; supportsRawSql: boolean; secretFields: string[] }
@@ -66,9 +80,14 @@ export class AdminApiService {
   createUser(body: { name: string; email: string; password: string; roleId: string; language: string; department: string | null }) {
     return this.http.post<AdminUser>('/api/users', body);
   }
-  updateUser(id: string, body: Partial<{ name: string; roleId: string; isActive: boolean; language: string; department: string | null }>) {
+  updateUser(id: string, body: Partial<{ name: string; roleId: string; isActive: boolean; language: string; department: string | null; homeDashboardId: string | null; attributes: Record<string, string> }>) {
     return this.http.patch<AdminUser>(`/api/users/${encodeURIComponent(id)}`, body);
   }
+  /** Signs a person out on every device they are signed in on. */
+  revokeSessions(id: string) {
+    return this.http.post<{ ended: number }>(`/api/users/${encodeURIComponent(id)}/sessions/revoke`, {});
+  }
+
   setPassword(id: string, password: string) {
     return this.http.post(`/api/users/${encodeURIComponent(id)}/password`, { password });
   }
@@ -83,6 +102,13 @@ export class AdminApiService {
 
   access() { return this.http.get<AccessMatrix>('/api/datasources/access'); }
   setAccess(id: string, roleIds: string[]) { return this.http.put(`/api/datasources/${encodeURIComponent(id)}/access`, { roleIds }); }
+
+  rules() { return this.http.get<RowRule[]>('/api/datasources/rules'); }
+  addRule(datasourceId: string, body: { roleId: string; column: string; attribute: string }) {
+    return this.http.post(`/api/datasources/${encodeURIComponent(datasourceId)}/rules`, body);
+  }
+  removeRule(id: string) { return this.http.delete(`/api/datasources/rules/${encodeURIComponent(id)}`); }
+  sourceColumns(id: string) { return this.http.get<{ name: string; columns: { name: string }[] }[]>(`/api/datasources/${encodeURIComponent(id)}/schema`); }
 
   connectors() { return this.http.get<ConnectorInfo[]>('/api/datasources/connectors'); }
 

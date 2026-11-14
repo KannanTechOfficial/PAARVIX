@@ -13,6 +13,7 @@ This file lists the licenses of third-party dependencies used by Paarvix.
 - ISC
 - MPL-2.0
 - AGPL-3.0 (compatible)
+- OFL-1.1 (SIL Open Font License), for font files only
 
 ## Forbidden Licenses
 
@@ -32,3 +33,11 @@ This file lists the licenses of third-party dependencies used by Paarvix.
 ---
 
 *Last updated: 2026-10-31*
+
+## Fonts
+
+Bundled with the web app and served from Paarvix itself (no external font service), licensed under the SIL Open Font License 1.1:
+
+- Inter: `@fontsource-variable/inter` (Rasmus Andersson)
+- Poppins: `@fontsource/poppins` (Indian Type Foundry)
+- JetBrains Mono: `@fontsource-variable/jetbrains-mono` (JetBrains)
