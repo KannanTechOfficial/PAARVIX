@@ -21,18 +21,52 @@ model User {
   email        String      @unique
   name         String
   passwordHash String      @map("password_hash")
+  /// Deprecated: read once to move existing users onto roleId. Do not use.
   role         UserRole    @default(VIEWER)
+  roleId       String?     @map("role_id")
   isActive     Boolean     @default(true) @map("is_active")
   avatarUrl    String?     @map("avatar_url")
   language     String      @default("en")
+  department   String?
+  /// Raised when a password is reset or the account is deactivated, so older sessions stop renewing.
+  sessionVersion Int       @default(0) @map("session_version")
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
 
+  assignedRole Role?       @relation(fields: [roleId], references: [id])
   dashboards   Dashboard[]
   datasources  Datasource[]
   queries      Query[]
 
   @@map("users")
+}
+
+/// Built-in roles are seeded on start and cannot be changed. Custom roles are created by admins.
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String   @default("")
+  permissions String[]
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users       User[]
+  datasources DatasourceAccess[]
+
+  @@map("roles")
+}
+
+/// Which roles may query a data source. Super Admin and roles with datasources:write always may.
+model DatasourceAccess {
+  datasourceId String     @map("datasource_id")
+  roleId       String     @map("role_id")
+  datasource   Datasource @relation(fields: [datasourceId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([datasourceId, roleId])
+  @@map("datasource_access")
 }
 
 model Dashboard {
@@ -65,6 +99,7 @@ model Datasource {
   creator     User     @relation(fields: [createdBy], references: [id])
   queries     Query[]
   dataTables  DataTable[]
+  access      DatasourceAccess[]
 
   @@map("datasources")
 }

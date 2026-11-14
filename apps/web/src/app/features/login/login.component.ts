@@ -2,24 +2,25 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
-import { Component, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
-import { AuthService } from '../../core/services/auth.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { AuthService, safeReturnUrl } from '../../core/services/auth.service';
+
+const GOOGLE_ERRORS = ['google_state', 'google_denied', 'google_exchange', 'google_unverified', 'google_not_registered', 'google_off'];
 
 @Component({
   selector: 'pvx-login',
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslatePipe],
+  imports: [FormsModule, TranslatePipe],
   template: `
     <div class="pvx-login-page">
       <div class="pvx-login-card">
         <div class="pvx-login-header">
-          <span class="pvx-login-logo">🔭</span>
           <h1>Paarvix</h1>
           <p>{{ 'app.tagline' | translate }}</p>
         </div>
@@ -55,9 +56,13 @@ import { AuthService } from '../../core/services/auth.service';
           </button>
         </form>
 
-        <div class="pvx-login-footer">
-          <span>First-time deployment? <a routerLink="/setup" class="pvx-setup-link">Run Setup Wizard</a></span>
-        </div>
+        @if (googleEnabled()) {
+          <div class="pvx-or"><span>{{ 'auth.or' | translate }}</span></div>
+          <a class="pvx-google" href="/api/auth/google">
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.2C1 16.6 0 20.2 0 24s1 7.4 2.7 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.2 1.5-5 2.3-8.2 2.3-6.3 0-11.6-4.1-13.4-9.8l-7.9 6.2C6.6 42.6 14.6 48 24 48z"/></svg>
+            {{ 'auth.google' | translate }}
+          </a>
+        }
       </div>
     </div>
   `,
@@ -145,6 +150,11 @@ import { AuthService } from '../../core/services/auth.service';
       font-weight: 500;
     }
 
+    .pvx-or { display: flex; align-items: center; gap: 12px; margin: 20px 0 16px; color: var(--pvx-text-muted); font-size: 13px; }
+    .pvx-or::before, .pvx-or::after { content: ''; flex: 1; border-top: 1px solid var(--pvx-border); }
+    .pvx-google { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; border: 1px solid var(--pvx-border-strong);
+      border-radius: 8px; background: var(--pvx-bg-card); color: var(--pvx-text); font-weight: 600; font-size: 14px; text-decoration: none; }
+    .pvx-google:hover { background: var(--pvx-bg-sunken); text-decoration: none; }
     .pvx-login-footer {
       text-align: center;
       margin-top: 24px;
@@ -160,14 +170,53 @@ import { AuthService } from '../../core/services/auth.service';
     }
   `],
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   email = '';
   password = '';
   error = signal('');
   loading = signal(false);
+  googleEnabled = signal(false);
 
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly t = inject(TranslateService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly returnUrl = safeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
+
+  ngOnInit() {
+    // Google sends the user back with the token in the fragment. Take it, then remove it from the address bar.
+    const hash = new URLSearchParams(location.hash.slice(1));
+    const token = hash.get('google');
+    if (token) {
+      history.replaceState(null, '', location.pathname);
+      this.auth.acceptToken(token);
+      this.auth.ensureUser().subscribe((u) => {
+        if (u) this.router.navigateByUrl('/dashboards');
+        else this.t.get('auth.errors.google_exchange').subscribe((text: string) => this.error.set(text));
+      });
+      return;
+    }
+    const code = new URLSearchParams(location.search).get('error');
+    if (code && GOOGLE_ERRORS.includes(code)) {
+      // get() waits for the language file; instant() would show the raw key on first load.
+      this.t.get(`auth.errors.${code}`).subscribe((text: string) => this.error.set(text));
+      history.replaceState(null, '', location.pathname);
+    }
+    if (this.route.snapshot.queryParamMap.get('expired')) {
+      this.t.get('auth.expired').subscribe((text: string) => this.error.set(text));
+    }
+    this.auth.checkSetupRequired().subscribe({
+      next: (s) => {
+        // A fresh install has no one to sign in as yet.
+        if (s.setupRequired) {
+          this.router.navigateByUrl('/setup');
+          return;
+        }
+        this.googleEnabled.set(!!s.googleEnabled);
+      },
+      error: () => undefined,
+    });
+  }
 
   onSubmit() {
     this.loading.set(true);
@@ -175,7 +224,7 @@ export class LoginComponent {
 
     this.auth.login(this.email, this.password).subscribe({
       next: () => {
-        this.router.navigate(['/dashboards']);
+        this.router.navigateByUrl(this.returnUrl);
       },
       error: (err) => {
         this.error.set(err.error?.message || 'Invalid email or password');

@@ -50,6 +50,6 @@ Please do NOT open public issues for security vulnerabilities. See [SECURITY.md]
 ## Questions?
 
 - GitHub Discussions: https://github.com/KannanTechOfficial/PAARVIX/discussions
-- Email: paarvix@kannantech.com
+- Email: support@kannantech.com
 
 Thank you for helping make Paarvix better! 🙏

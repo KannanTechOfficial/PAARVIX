@@ -51,3 +51,11 @@ temp/
 # Private business context. Never commit.
 CLAUDE.local.md
 /docs/plans/
+
+# Google OAuth client files hold a secret. Keep them out of git; the API reads GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET from .env.
+g-client-secre*.json
+client_secret*.json
+*client-secret*.json
+
+# Logs written by ./dev.sh
+.dev-logs/

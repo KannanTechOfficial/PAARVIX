@@ -2,7 +2,7 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 import { BadRequestException } from '@nestjs/common';
@@ -16,7 +16,7 @@ const sales: TableSchema = {
     { name: 'Region', type: 'text' },
   ],
 };
-const ctx: SecurityContext = { userId: 'u1', role: 'EDITOR', tenantId: null, rowFilters: [] };
+const ctx: SecurityContext = { userId: 'u1', role: 'EDITOR', permissions: [], tenantId: null, rowFilters: [] };
 
 describe('assertSpecShape', () => {
   it.each([[undefined], [null], [{}], [{ table: 5 }], [{ table: 'sales', filters: 'x' }], [{ table: 'sales', columns: {} }]])(

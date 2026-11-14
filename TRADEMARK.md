@@ -20,6 +20,6 @@ If you fork Paarvix, you must rename your fork and remove all Paarvix/KannanTech
 
 ## Questions
 
-Contact paarvix@kannantech.com for trademark usage requests.
+Contact support@kannantech.com for trademark usage requests.
 
 © 2026 Kannan / KannanTech. All rights reserved.

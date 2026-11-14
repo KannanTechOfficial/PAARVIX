@@ -141,4 +141,4 @@ Comprehensive technical guides are available in the [Paarvix Wiki](https://githu
 
 Paarvix is licensed under the [GNU Affero General Public License v3.0 (AGPLv3)](LICENSE).  
 Copyright (C) 2026 Kannan / KannanTech (https://kannantech.com).  
-Commercial licensing and enterprise support: [paarvix@kannantech.com](mailto:paarvix@kannantech.com).
+Commercial licensing and enterprise support: [support@kannantech.com](mailto:support@kannantech.com).

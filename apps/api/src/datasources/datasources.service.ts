@@ -2,9 +2,11 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
+import { SUPER_ADMIN } from '@paarvix/shared';
+import { type AuthUser, can } from '../access/auth-user';
 import { BadRequestException, ForbiddenException, HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { QuerySpec, SecurityContext } from '@paarvix/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -61,12 +63,64 @@ export class DatasourcesService {
     return { id: ds.id, type: ds.type, config };
   }
 
-  async findAll() {
+  /** Super Admin and anyone who manages data sources may use every source; others only the ones granted to their role. */
+  private managesAll(user: AuthUser): boolean {
+    return can(user, 'datasources:write');
+  }
+
+  async findAll(user: AuthUser) {
     const list = await this.prisma.datasource.findMany({
+      where: this.managesAll(user) ? {} : { access: { some: { roleId: user.roleId } } },
       include: { creator: { select: { id: true, name: true, email: true } } },
       orderBy: { createdAt: 'desc' },
     });
     return list.map((ds) => this.publicView(ds));
+  }
+
+  /** Throws unless the user's role may query this source. Answers "not found", so ids are not confirmed. */
+  async assertCanUse(id: string, user: AuthUser) {
+    if (this.managesAll(user)) return;
+    const grant = await this.prisma.datasourceAccess.findUnique({
+      where: { datasourceId_roleId: { datasourceId: id, roleId: user.roleId } },
+    });
+    if (!grant) throw new NotFoundException(`Datasource ${id} not found`);
+  }
+
+  /** Every source with the roles allowed to query it. */
+  async accessMatrix() {
+    const [sources, roles] = await Promise.all([
+      this.prisma.datasource.findMany({
+        select: { id: true, name: true, type: true, access: { select: { roleId: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.role.findMany({ select: { id: true, key: true, name: true, permissions: true, isSystem: true }, orderBy: [{ isSystem: 'desc' }, { createdAt: 'asc' }] }),
+    ]);
+    return {
+      roles: roles.map((r) => ({
+        id: r.id,
+        key: r.key,
+        name: r.name,
+        isSystem: r.isSystem,
+        alwaysAllowed: r.key === SUPER_ADMIN || r.permissions.includes('datasources:write'),
+        canQuery: r.key === SUPER_ADMIN || r.permissions.includes('datasources:query'),
+      })),
+      sources: sources.map((s) => ({ id: s.id, name: s.name, type: s.type, roleIds: s.access.map((a) => a.roleId) })),
+    };
+  }
+
+  async setAccess(id: string, roleIds: unknown) {
+    if (!Array.isArray(roleIds) || roleIds.some((r) => typeof r !== 'string')) {
+      throw new BadRequestException('roleIds must be a list');
+    }
+    if (!(await this.prisma.datasource.findUnique({ where: { id } }))) throw new NotFoundException(`Datasource ${id} not found`);
+    const ids = [...new Set(roleIds as string[])];
+    const found = await this.prisma.role.count({ where: { id: { in: ids } } });
+    if (found !== ids.length) throw new BadRequestException('Unknown role');
+    await this.prisma.$transaction([
+      this.prisma.datasourceAccess.deleteMany({ where: { datasourceId: id } }),
+      this.prisma.datasourceAccess.createMany({ data: ids.map((roleId) => ({ datasourceId: id, roleId })) }),
+    ]);
+    return { id, roleIds: ids };
   }
 
   async create(data: { name: string; type: string; config: unknown; createdBy: string }) {

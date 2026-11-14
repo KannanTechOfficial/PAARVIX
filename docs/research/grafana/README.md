@@ -19,9 +19,11 @@ Hands-on study of **Grafana OSS 13.0.2** (commit `3fcdbc5a`), 2026-11-01. The ho
 | 9 | [Pages, settings and feature map](09-pages-and-settings.md) | Every route, setting group, panel, data source and transformation, mapped to Paarvix |
 | 10 | [Inner forms and behaviour](10-inner-forms-and-behaviour.md) | Admin pages, panel and data source options, Enterprise, plugins, behaviour tests, speed |
 | 11 | [Source inventory](11-source-inventory.md) | Name-only lists from the 13.4.0-pre source: routes, services, flags, options, editions |
+| 12 | [Gaps and opportunities](12-gaps-and-opportunities.md) | Where Grafana leaves users unserved, most-voted open requests, the five-layer theming design. Desk research, 2026-11-14 |
 
 ## Evidence labels
 
+- **[S] Sourced:** read from a public page or issue tracker. Used in doc 12 only.
 - **[O] Observed:** tested on the lab instance, or read from its shipped files.
 - **[K] Background:** general product knowledge, not verified here.
 - **[R] Recommendation:** Paarvix opinion, not a Grafana fact.

@@ -51,4 +51,4 @@ Only give Admin to people you trust with all your data. Viewers will receive dat
 
 - **Paarvix does not open:** run `docker ps` and check that the Paarvix containers are up.
 - **A source will not connect:** see the common problems in [Connecting your data](connecting-data.md#common-problems).
-- **Still stuck:** write to paarvix@kannantech.com. Never send passwords or real student, patient or staff data.
+- **Still stuck:** write to support@kannantech.com. Never send passwords or real student, patient or staff data.

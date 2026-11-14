@@ -24,7 +24,7 @@
 | Story | "Paarvai means vision. Paarvix gives you a clear vision of your data." |
 | Tagline | **See your data clearly.** · Secondary: "From data to decisions, instantly." |
 | Company | KannanTech — https://kannantech.com |
-| Contacts | paarvix@kannantech.com · security@kannantech.com |
+| Contacts | support@kannantech.com · admin@kannantech.com |
 | GitHub | `KannanTechOfficial/PAARVIX` (public) · `KannanTechOfficial/paarvix-pro` (private) |
 | npm | `@paarvix/*` |
 | Palette | Deep blue `#1E3A8A`, teal `#14B8A6`, orange `#F97316`, slate neutrals; full dark theme |
@@ -75,7 +75,7 @@
    * Paarvix — See your data clearly.
    * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
    * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
-   * Commercial licenses: paarvix@kannantech.com
+   * Commercial licenses: support@kannantech.com
    */
   ```
 - Private `paarvix-pro`: proprietary. Never published or copied into public.

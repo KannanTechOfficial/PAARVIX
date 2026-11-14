@@ -2,7 +2,7 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 import { Module } from '@nestjs/common';
@@ -13,6 +13,8 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { requireSecret } from './require-secret';
 import { JwtStrategy } from './jwt.strategy';
+import { GoogleService } from './google.service';
+import { LoginThrottleService } from './login-throttle.service';
 
 @Module({
   imports: [
@@ -29,7 +31,7 @@ import { JwtStrategy } from './jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, GoogleService, LoginThrottleService],
   exports: [AuthService],
 })
 export class AuthModule {}

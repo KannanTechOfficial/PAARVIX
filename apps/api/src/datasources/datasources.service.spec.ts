@@ -2,7 +2,7 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 import { ForbiddenException } from '@nestjs/common';
@@ -15,7 +15,8 @@ describe('DatasourcesService.query', () => {
     const service = new DatasourcesService(prisma as any, {} as any, {} as any, {} as any);
     const ctx: SecurityContext = {
       userId: 'u1',
-      role: 'EDITOR',
+      role: 'editor',
+      permissions: [],
       tenantId: null,
       rowFilters: [{ column: 'dept', op: 'eq', value: 'x' }],
     };

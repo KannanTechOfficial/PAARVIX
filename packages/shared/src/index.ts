@@ -2,13 +2,14 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 export * from './dataframe';
 export * from './downsample';
 export * from './transformations';
 export * from './query';
+export * from './permissions';
 
 export type DataType = 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'json';
 

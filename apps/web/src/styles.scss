@@ -2,35 +2,77 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 @use 'styles/variables' as *;
 
+// Workspace tokens read --pvx-ws-* first: those come from the saved theme (layer 1).
+// Without a theme, or inside the Administration area, the brand defaults apply.
 :root {
-  --pvx-primary: #{$pvx-deep-blue};
-  --pvx-accent: #{$pvx-teal};
-  --pvx-warn: #{$pvx-orange};
+  --pvx-brand-primary: #{$pvx-deep-blue};
+  --pvx-brand-accent: #{$pvx-teal};
+  --pvx-brand-warn: #{$pvx-orange};
+
+  --pvx-primary: var(--pvx-ws-primary, var(--pvx-brand-primary));
+  --pvx-accent: var(--pvx-ws-accent, var(--pvx-brand-accent));
+  --pvx-warn: var(--pvx-ws-warn, var(--pvx-brand-warn));
+  --pvx-radius: var(--pvx-ws-radius, #{$pvx-radius-md});
+
+  --pvx-on-primary: #ffffff;
+  --pvx-link: var(--pvx-primary);
   --pvx-danger: #b91c1c;
+  --pvx-danger-bg: #fef2f2;
+  --pvx-success: #047857;
+  --pvx-success-bg: #ecfdf5;
+  --pvx-warn-text: #9a3412;
+  --pvx-warn-bg: #fff7ed;
   --pvx-bg: #{$pvx-slate-50};
   --pvx-bg-card: #ffffff;
-  --pvx-bg-sidebar: #{$pvx-slate-900};
+  --pvx-bg-sunken: #{$pvx-slate-100};
+  --pvx-bg-sidebar: #{$pvx-deep-blue};
+  --pvx-sidebar-text: #dbe4f7;
+  --pvx-sidebar-muted: #a9bce6;
+  --pvx-sidebar-hover: rgba(255, 255, 255, 0.1);
   --pvx-text: #{$pvx-slate-900};
-  --pvx-text-muted: #{$pvx-slate-500};
+  --pvx-text-muted: #{$pvx-slate-600};
   --pvx-border: #{$pvx-slate-200};
+  --pvx-border-strong: #{$pvx-slate-300};
+  --pvx-focus: #{$pvx-orange};
   --pvx-font-ui: #{$pvx-font-ui};
   --pvx-font-code: #{$pvx-font-code};
-  --pvx-radius: #{$pvx-radius-md};
+  --pvx-font-brand: #{$pvx-font-marketing};
+  --pvx-row: 44px;
+}
+
+[data-density='compact'] {
+  --pvx-row: 36px;
 }
 
 [data-theme='dark'] {
+  --pvx-link: #93b4f5;
   --pvx-danger: #fca5a5;
+  --pvx-danger-bg: rgba(239, 68, 68, 0.12);
+  --pvx-success: #6ee7b7;
+  --pvx-success-bg: rgba(16, 185, 129, 0.12);
+  --pvx-warn-text: #fdba74;
+  --pvx-warn-bg: rgba(249, 115, 22, 0.12);
   --pvx-bg: #{$pvx-slate-950};
   --pvx-bg-card: #{$pvx-slate-900};
-  --pvx-bg-sidebar: #{$pvx-slate-950};
+  --pvx-bg-sunken: #{$pvx-slate-800};
+  --pvx-bg-sidebar: #0b1a45;
   --pvx-text: #{$pvx-slate-100};
   --pvx-text-muted: #{$pvx-slate-400};
   --pvx-border: #{$pvx-slate-700};
+  --pvx-border-strong: #{$pvx-slate-600};
+}
+
+// The Administration area never takes the custom theme (theme safety rule 3).
+.pvx-admin-area {
+  --pvx-primary: var(--pvx-brand-primary);
+  --pvx-accent: var(--pvx-brand-accent);
+  --pvx-warn: var(--pvx-brand-warn);
+  --pvx-radius: #{$pvx-radius-md};
 }
 
 *,
@@ -66,4 +108,204 @@ a {
 code,
 pre {
   font-family: var(--pvx-font-code);
+}
+
+// ---------- Browser surfaces ----------
+::selection {
+  background: color-mix(in srgb, var(--pvx-accent) 30%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--pvx-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+a {
+  color: var(--pvx-link);
+  text-underline-offset: 3px;
+}
+
+.pvx-num,
+td.num {
+  font-variant-numeric: tabular-nums;
+}
+
+// ---------- Shared components ----------
+// Every page uses these; no page redefines a button.
+.pvx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--pvx-radius);
+  border: 1px solid var(--pvx-border-strong);
+  background: var(--pvx-bg-card);
+  color: var(--pvx-text);
+  font: 600 14px/1 var(--pvx-font-ui);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out;
+
+  &:hover:not(:disabled) { background: var(--pvx-bg-sunken); text-decoration: none; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  &.primary {
+    background: var(--pvx-primary);
+    border-color: var(--pvx-primary);
+    color: var(--pvx-on-primary);
+    &:hover:not(:disabled) { background: color-mix(in srgb, var(--pvx-primary) 85%, #000); }
+  }
+
+  &.danger {
+    color: var(--pvx-danger);
+    border-color: color-mix(in srgb, var(--pvx-danger) 40%, transparent);
+    &:hover:not(:disabled) { background: var(--pvx-danger-bg); }
+  }
+
+  &.ghost {
+    border-color: transparent;
+    background: transparent;
+    &:hover:not(:disabled) { background: var(--pvx-bg-sunken); }
+  }
+
+  &.small { min-height: 32px; padding: 0 12px; font-size: 13px; }
+}
+
+.pvx-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  > span { font-size: 13px; font-weight: 600; color: var(--pvx-text); }
+  > small { font-size: 12px; color: var(--pvx-text-muted); }
+}
+
+.pvx-input,
+.pvx-select {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--pvx-border-strong);
+  border-radius: var(--pvx-radius);
+  background: var(--pvx-bg-card);
+  color: var(--pvx-text);
+  font: 14px var(--pvx-font-ui);
+  width: 100%;
+
+  &::placeholder { color: var(--pvx-text-muted); }
+  &:focus-visible { outline-offset: 0; border-color: var(--pvx-primary); }
+}
+
+.pvx-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+
+  input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--pvx-primary); flex-shrink: 0; }
+  input:disabled + span { color: var(--pvx-text-muted); }
+}
+
+.pvx-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pvx-page-head {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+  p { color: var(--pvx-text-muted); font-size: 14px; margin-top: 4px; max-width: 70ch; }
+  .actions { margin-left: auto; display: flex; gap: 8px; }
+}
+
+.pvx-panel {
+  background: var(--pvx-bg-card);
+  border: 1px solid var(--pvx-border);
+  border-radius: var(--pvx-radius);
+}
+
+.pvx-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--pvx-border);
+  border-radius: var(--pvx-radius);
+  background: var(--pvx-bg-card);
+}
+
+.pvx-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th {
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--pvx-text-muted);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--pvx-border);
+    background: var(--pvx-bg-sunken);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0 16px;
+    height: var(--pvx-row);
+    border-bottom: 1px solid var(--pvx-border);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: 0; }
+  tr.inactive td { color: var(--pvx-text-muted); }
+}
+
+.pvx-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--pvx-bg-sunken);
+  color: var(--pvx-text-muted);
+  white-space: nowrap;
+
+  &.ok { background: var(--pvx-success-bg); color: var(--pvx-success); }
+  &.warn { background: var(--pvx-warn-bg); color: var(--pvx-warn-text); }
+  &.danger { background: var(--pvx-danger-bg); color: var(--pvx-danger); }
+  &.brand { background: color-mix(in srgb, var(--pvx-primary) 12%, transparent); color: var(--pvx-link); }
+}
+
+.pvx-note {
+  padding: 12px 16px;
+  border-radius: var(--pvx-radius);
+  font-size: 14px;
+
+  &.error { background: var(--pvx-danger-bg); color: var(--pvx-danger); }
+  &.ok { background: var(--pvx-success-bg); color: var(--pvx-success); }
+  &.info { background: var(--pvx-bg-sunken); color: var(--pvx-text-muted); }
+}
+
+.pvx-empty {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--pvx-text-muted);
+}
+
+.pvx-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

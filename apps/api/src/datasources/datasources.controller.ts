@@ -2,7 +2,7 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 import {
@@ -10,7 +10,7 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
+  Put,
   Get,
   Param,
   Post,
@@ -26,19 +26,12 @@ import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { DatasourcesService } from './datasources.service';
 import { SheetSyncService } from './sheet-sync.service';
-import { toSecurityContext } from './security-context';
+import { type AuthUser, CurrentUser, toSecurityContext } from '../access/auth-user';
+import { PermissionsGuard, RequirePermissions } from '../access/permissions.guard';
+import { FeaturesService } from '../access/features.service';
+import { ConnectorRegistry } from './connectors/connector-registry';
 import type { QuerySpec } from '@paarvix/shared';
 import { JwtAuthGuard } from '../auth/auth.guard';
-
-type AuthUser = { id: string; role: string };
-
-function requireRole(req: FastifyRequest, ...roles: string[]): AuthUser {
-  const user = (req as any).user as AuthUser;
-  if (!roles.includes(user.role)) {
-    throw new ForbiddenException('You do not have permission for this action');
-  }
-  return user;
-}
 
 const TOO_BIG = 'File is larger than 50 MB';
 const MAX_NAME = 100;
@@ -83,76 +76,98 @@ async function withUpload<T>(req: FastifyRequest, needsName: boolean, use: (path
 }
 
 @Controller('datasources')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class DatasourcesController {
   constructor(
     private readonly datasourcesService: DatasourcesService,
     private readonly sheetSync: SheetSyncService,
+    private readonly registry: ConnectorRegistry,
+    private readonly features: FeaturesService,
   ) {}
 
   @Get()
-  findAll(@Req() req: FastifyRequest) {
-    requireRole(req, 'ADMIN', 'EDITOR');
-    return this.datasourcesService.findAll();
+  @RequirePermissions('datasources:read')
+  findAll(@CurrentUser() user: AuthUser) {
+    return this.datasourcesService.findAll(user);
+  }
+
+  @Get('connectors')
+  @RequirePermissions('plugins:read')
+  connectors() {
+    return this.registry.list();
+  }
+
+  @Get('access')
+  @RequirePermissions('datasources:access')
+  accessMatrix() {
+    this.features.assertEnabled('datasources.access');
+    return this.datasourcesService.accessMatrix();
+  }
+
+  @Put(':id/access')
+  @RequirePermissions('datasources:access')
+  setAccess(@Param('id') id: string, @Body() body: { roleIds: string[] }) {
+    this.features.assertEnabled('datasources.access');
+    return this.datasourcesService.setAccess(id, body?.roleIds);
   }
 
   @Post()
-  create(
-    @Body() body: { name: string; type: string; config: Record<string, unknown> },
-    @Req() req: FastifyRequest,
-  ) {
-    const user = requireRole(req, 'ADMIN');
+  @RequirePermissions('datasources:write')
+  create(@Body() body: { name: string; type: string; config: Record<string, unknown> }, @CurrentUser() user: AuthUser) {
     return this.datasourcesService.create({ ...body, createdBy: user.id });
   }
 
   @Post('upload')
-  upload(@Req() req: FastifyRequest) {
-    const user = requireRole(req, 'ADMIN');
+  @RequirePermissions('datasources:write')
+  upload(@Req() req: FastifyRequest, @CurrentUser() user: AuthUser) {
     return withUpload(req, true, (path, name) => this.datasourcesService.createFromUpload(name, path, user.id));
   }
 
   @Post(':id/upload')
+  @RequirePermissions('datasources:write')
   async replaceUpload(@Param('id') id: string, @Req() req: FastifyRequest) {
-    requireRole(req, 'ADMIN');
     await this.datasourcesService.uploadTarget(id);
     return withUpload(req, false, (path) => this.datasourcesService.replaceUpload(id, path));
   }
 
   @Post(':id/sync')
-  async sync(@Param('id') id: string, @Req() req: FastifyRequest) {
-    requireRole(req, 'ADMIN');
+  @RequirePermissions('datasources:write')
+  async sync(@Param('id') id: string) {
     await this.sheetSync.sync(id);
     return { synced: id };
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Req() req: FastifyRequest) {
-    requireRole(req, 'ADMIN');
+  @RequirePermissions('datasources:write')
+  remove(@Param('id') id: string) {
     return this.datasourcesService.remove(id);
   }
 
   @Post(':id/test')
-  testConnection(@Param('id') id: string, @Req() req: FastifyRequest) {
-    requireRole(req, 'ADMIN');
+  @RequirePermissions('datasources:write')
+  testConnection(@Param('id') id: string) {
     return this.datasourcesService.testConnection(id);
   }
 
-  /** Raw SQL is never available to Viewers. */
+  /** Raw SQL needs datasources:query and a grant for the user's role on this source. */
   @Post(':id/query')
-  query(@Param('id') id: string, @Body() body: { sql: string }, @Req() req: FastifyRequest) {
-    const user = requireRole(req, 'ADMIN', 'EDITOR');
+  @RequirePermissions('datasources:query')
+  async query(@Param('id') id: string, @Body() body: { sql: string }, @CurrentUser() user: AuthUser) {
+    await this.datasourcesService.assertCanUse(id, user);
     return this.datasourcesService.query(id, body.sql, [], toSecurityContext(user));
   }
 
   @Get(':id/schema')
-  schema(@Param('id') id: string, @Req() req: FastifyRequest) {
-    const user = requireRole(req, 'ADMIN', 'EDITOR');
+  @RequirePermissions('datasources:read')
+  async schema(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    await this.datasourcesService.assertCanUse(id, user);
     return this.datasourcesService.schema(id, toSecurityContext(user));
   }
 
   @Post(':id/data')
-  data(@Param('id') id: string, @Body() spec: QuerySpec, @Req() req: FastifyRequest) {
-    const user = requireRole(req, 'ADMIN', 'EDITOR');
+  @RequirePermissions('datasources:query')
+  async data(@Param('id') id: string, @Body() spec: QuerySpec, @CurrentUser() user: AuthUser) {
+    await this.datasourcesService.assertCanUse(id, user);
     return this.datasourcesService.data(id, spec, toSecurityContext(user));
   }
 }

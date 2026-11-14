@@ -2,7 +2,7 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 export type UserRole = 'ADMIN' | 'EDITOR' | 'VIEWER';
@@ -18,7 +18,9 @@ export interface Filter {
 /** Required on every data path. `tenantId` is null until multi-tenancy (P3). */
 export interface SecurityContext {
   userId: string;
-  role: UserRole;
+  /** Role key, e.g. "editor" or a custom role. */
+  role: string;
+  permissions: string[];
   tenantId: string | null;
   rowFilters: Filter[]; // always ANDed in; empty until RLS (P2 Pro)
 }

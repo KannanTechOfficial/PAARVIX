@@ -11,7 +11,7 @@
 
 **Please do NOT open a public issue for security vulnerabilities.**
 
-Instead, email **security@kannantech.com** with:
+Instead, email **admin@kannantech.com** with:
 
 1. Description of the vulnerability
 2. Steps to reproduce
@@ -37,6 +37,6 @@ We do not currently offer a formal bug bounty program, but we gratefully acknowl
 
 ## Contact
 
-**Email:** security@kannantech.com
+**Email:** admin@kannantech.com
 
 © 2026 Kannan / KannanTech. All rights reserved.

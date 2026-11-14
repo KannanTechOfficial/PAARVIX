@@ -5,11 +5,22 @@
   },
   "nav": {
     "dashboards": "Dashboards",
-    "datasources": "Data Sources",
+    "datasources": "Data sources",
     "queries": "Queries",
     "templates": "Templates",
-    "settings": "Settings",
-    "logout": "Logout"
+    "settings": "Settings and theme",
+    "logout": "Sign out",
+    "users": "Users",
+    "roles": "Roles",
+    "access": "Data access",
+    "plugins": "Plugins",
+    "workspace": "Workspace",
+    "administration": "Administration",
+    "main": "Main menu",
+    "expand": "Expand menu",
+    "collapse": "Collapse menu",
+    "light": "Light mode",
+    "dark": "Dark mode"
   },
   "auth": {
     "login": "Login",
@@ -22,7 +33,18 @@
       "subtitle": "Create your admin account to get started.",
       "name": "Full Name",
       "createAccount": "Create Admin Account"
-    }
+    },
+    "google": "Sign in with Google",
+    "errors": {
+      "google_state": "Google sign-in expired or was interrupted. Please try again.",
+      "google_denied": "Google sign-in was cancelled.",
+      "google_exchange": "Could not complete Google sign-in. Please try again.",
+      "google_unverified": "Your Google account email is not verified.",
+      "google_not_registered": "This Google account is not set up in Paarvix. Ask your administrator to add your email.",
+      "google_off": "Google sign-in is not set up on this server."
+    },
+    "or": "or",
+    "expired": "Your session ended. Please sign in again."
   },
   "dashboard": {
     "create": "New Dashboard",
@@ -114,5 +136,163 @@
     "firstRows": "First 50 rows",
     "noRows": "This table has no rows.",
     "onlyFirst": "Only the first rows are shown."
+  },
+  "admin": {
+    "actions": "Actions",
+    "users": {
+      "title": "Users",
+      "subtitle": "Everyone who can sign in, and the role that decides what they can do.",
+      "add": "Add user",
+      "addTitle": "Add a user",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "passwordHint": "At least 8 characters. Share it privately; they can change it later.",
+      "role": "Role",
+      "department": "Department",
+      "departmentHint": "Optional, e.g. Computer Science.",
+      "language": "Language",
+      "create": "Add user",
+      "status": "Status",
+      "you": "You",
+      "noRole": "No role",
+      "active": "Active",
+      "inactive": "Inactive",
+      "newPassword": "New password",
+      "resetPassword": "Reset password",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "empty": "No users yet.",
+      "added": "{{name}} was added.",
+      "roleChanged": "{{name}} is now {{role}}.",
+      "activated": "{{name}} can sign in again.",
+      "deactivated": "{{name}} can no longer sign in.",
+      "passwordChanged": "Password changed for {{name}}."
+    },
+    "roles": {
+      "title": "Roles",
+      "subtitle": "A role is a set of permissions. Built-in roles are fixed; copy one to make your own.",
+      "new": "New role",
+      "userCount": "{{count}} users",
+      "builtIn": "Built-in",
+      "custom": "Custom",
+      "untitled": "New role",
+      "unsaved": "Not saved yet",
+      "copy": "Copy to new role",
+      "superNote": "Super Admin always has every permission and cannot be changed. At least one active Super Admin must exist.",
+      "builtInNote": "Built-in roles cannot be edited. Copy this role to change its permissions.",
+      "name": "Role name",
+      "description": "Description",
+      "delete": "Delete role",
+      "pick": "Choose a role to see its permissions.",
+      "copyName": "{{name}} (copy)",
+      "saved": "{{name}} was saved.",
+      "confirmDelete": "Delete the role {{name}}? This cannot be undone.",
+      "deleted": "{{name}} was deleted.",
+      "userCountOne": "1 user"
+    },
+    "permGroups": {
+      "workspace": "Dashboards",
+      "data": "Data",
+      "college": "College",
+      "admin": "Administration"
+    },
+    "perms": {
+      "dashboards:read": "View dashboards",
+      "dashboards:write": "Create and edit dashboards",
+      "dashboards:delete": "Delete dashboards",
+      "templates:apply": "Apply and remove templates",
+      "datasources:read": "See data sources and their tables",
+      "datasources:query": "Run queries and preview rows",
+      "datasources:write": "Add, update and remove data sources",
+      "datasources:access": "Choose which roles can use each data source",
+      "college:analytics": "View college analytics",
+      "college:students": "View any student record",
+      "users:read": "See users",
+      "users:write": "Add, edit and deactivate users",
+      "roles:read": "See roles and permissions",
+      "roles:write": "Create and edit roles",
+      "settings:write": "Change organisation settings",
+      "theme:write": "Change the theme",
+      "plugins:read": "See installed connectors and plugins"
+    },
+    "access": {
+      "title": "Data access",
+      "subtitle": "Choose which roles can query each data source. Dashboards still decide what viewers see.",
+      "noSources": "No data sources yet.",
+      "addSource": "Add a data source",
+      "source": "Data source",
+      "alwaysHint": "This role manages data sources, so it can use all of them.",
+      "always": "Always",
+      "noQueryHint": "This role cannot run queries, so access does not apply.",
+      "noQuery": "No queries",
+      "allow": "Allow {{role}} to use {{source}}",
+      "legend": "\"Always\" roles manage data sources. Roles marked \"No queries\" only see data through dashboards. Changes save straight away.",
+      "saved": "Access for {{source}} was saved."
+    },
+    "plugins": {
+      "title": "Plugins",
+      "subtitle": "Connectors and features installed on this server.",
+      "connectors": "Connectors",
+      "name": "Name",
+      "kind": "How it reads data",
+      "sql": "Runs SQL",
+      "status": "Status",
+      "types": {
+        "postgres": "PostgreSQL",
+        "mysql": "MySQL or MariaDB",
+        "excel": "Excel upload",
+        "gsheet": "Google Sheets"
+      },
+      "imported": "Imported into Paarvix",
+      "live": "Read live",
+      "yes": "Yes",
+      "no": "No",
+      "builtIn": "Built in",
+      "features": "Features",
+      "featuresHint": "These may need a licence in a later version. For now every one is on.",
+      "on": "On",
+      "off": "Off",
+      "later": "Installing third-party plugins arrives with the plugin system in a later release."
+    },
+    "features": {
+      "roles": {
+        "custom": "Custom roles"
+      },
+      "datasources": {
+        "access": "Data access by role"
+      },
+      "theme": {
+        "custom": "Custom theme"
+      }
+    },
+    "settings": {
+      "title": "Settings and theme",
+      "subtitle": "Your organisation's name, language and look.",
+      "org": "Organisation",
+      "orgName": "Organisation name",
+      "orgNameHint": "Shown at the top of the menu.",
+      "language": "Default language",
+      "theme": "Theme",
+      "themeHint": "Applies to dashboards and the workspace. Administration pages always keep the standard look, so a theme can never hide these controls.",
+      "colours": {
+        "primary": "Primary colour",
+        "accent": "Accent colour",
+        "warn": "Highlight colour"
+      },
+      "radius": "Corner radius",
+      "density": "Row density",
+      "comfortable": "Comfortable",
+      "compact": "Compact",
+      "sampleLabel": "Attendance this week",
+      "sampleButton": "Open dashboard",
+      "previewLabel": "Preview",
+      "lowContrast": "White text on this primary colour is hard to read (contrast {{ratio}}:1; at least 4.5:1 is needed). Choose a darker colour.",
+      "applyTheme": "Apply theme",
+      "resetTheme": "Reset to default",
+      "savedOrg": "Organisation settings saved.",
+      "savedTheme": "Theme applied.",
+      "resetDone": "Theme reset to the default."
+    }
   }
 }

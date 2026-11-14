@@ -2,7 +2,7 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 import { NestFactory } from '@nestjs/core';
@@ -20,6 +20,9 @@ async function bootstrap() {
     AppModule,
     new FastifyAdapter({
       logger: true,
+      // The visitor's real address comes from X-Forwarded-For, believed only from these proxies.
+      // Default: this machine (the dev proxy) and the Docker network, where nginx sets the header.
+      trustProxy: (process.env.TRUSTED_PROXIES ?? '127.0.0.1,::1').split(',').map((s) => s.trim()).filter(Boolean),
     }),
   );
 

@@ -2,10 +2,10 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 interface TemplateDashboard {
@@ -49,15 +49,8 @@ export class TemplatesService {
     return dashboards;
   }
 
-  private assertAdmin(role: string) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException('Only admins can change templates');
-    }
-  }
-
   /** Creates the template's dashboards. Safe to repeat. */
-  async apply(key: string, datasourceId: string, user: { id: string; role: string }) {
-    this.assertAdmin(user.role);
+  async apply(key: string, datasourceId: string, user: { id: string }) {
     const datasource = datasourceId
       ? await this.prisma.datasource.findUnique({ where: { id: datasourceId } })
       : null;
@@ -82,8 +75,7 @@ export class TemplatesService {
   }
 
   /** Removes the template's dashboards, returning the workspace to empty. */
-  async remove(key: string, user: { role: string }) {
-    this.assertAdmin(user.role);
+  async remove(key: string, _user: { id: string }) {
     const slugs = this.dashboardsFor(key).map((d) => d.slug);
     await this.prisma.dashboard.deleteMany({ where: { slug: { in: slugs } } });
     return { removed: key };

@@ -2,7 +2,7 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
@@ -27,7 +27,8 @@ export const appConfig: ApplicationConfig = {
     }),
     provideTranslateHttpLoader({
       prefix: '/assets/i18n/',
-      suffix: '.json',
+      // A fresh tag per page load, so a browser never shows labels from an older install's cached file.
+      suffix: `.json?v=${Date.now()}`,
     }),
   ],
 };

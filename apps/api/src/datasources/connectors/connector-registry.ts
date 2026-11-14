@@ -2,7 +2,7 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -25,6 +25,15 @@ export class ConnectorRegistry {
   /** Every connector's secret keys. Never throws, so rows of an unknown type can still be listed and removed. */
   allSecretFields(): Set<string> {
     return new Set([...this.connectors.values()].flatMap((c) => c.secretFields));
+  }
+
+  /** Installed connectors, for the Plugins page. */
+  list(): { type: string; supportsRawSql: boolean; secretFields: string[] }[] {
+    return [...this.connectors.values()].map((c) => ({
+      type: c.type,
+      supportsRawSql: c.capabilities.supportsRawSql,
+      secretFields: c.secretFields,
+    }));
   }
 
   get(type: string): Connector {

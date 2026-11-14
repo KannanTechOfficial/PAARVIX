@@ -2,7 +2,7 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 import { Module } from '@nestjs/common';
@@ -16,6 +16,7 @@ import { SettingsModule } from './settings/settings.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CollegeModule } from './college/college.module';
 import { TemplatesModule } from './templates/templates.module';
+import { AccessModule } from './access/access.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { TemplatesModule } from './templates/templates.module';
       envFilePath: '../../.env',
     }),
     PrismaModule,
+    AccessModule,
     HealthModule,
     AuthModule,
     UsersModule,

@@ -2,192 +2,152 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
-import { Component, signal, inject } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { filter, map } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
+import { AdminApiService } from '../../services/admin-api.service';
+import { IconComponent } from '../../ui/icon.component';
+
+interface NavItem { path: string; label: string; icon: string; permission: string }
+
+const WORKSPACE: NavItem[] = [
+  { path: '/dashboards', label: 'nav.dashboards', icon: 'dashboards', permission: 'dashboards:read' },
+  { path: '/queries', label: 'nav.queries', icon: 'queries', permission: 'datasources:query' },
+  { path: '/templates', label: 'nav.templates', icon: 'templates', permission: 'templates:apply' },
+];
+
+const ADMIN: NavItem[] = [
+  { path: '/datasources', label: 'nav.datasources', icon: 'datasources', permission: 'datasources:read' },
+  { path: '/admin/users', label: 'nav.users', icon: 'users', permission: 'users:read' },
+  { path: '/admin/roles', label: 'nav.roles', icon: 'roles', permission: 'roles:read' },
+  { path: '/admin/access', label: 'nav.access', icon: 'access', permission: 'datasources:access' },
+  { path: '/admin/plugins', label: 'nav.plugins', icon: 'plugins', permission: 'plugins:read' },
+  { path: '/admin/settings', label: 'nav.settings', icon: 'settings', permission: 'settings:write' },
+];
+
+/** Routes drawn in the default design whatever the theme, so admins can always repair it. */
+const ADMIN_PREFIXES = ['/admin', '/datasources'];
 
 @Component({
   selector: 'pvx-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, IconComponent],
   template: `
-    <div class="pvx-shell" [class.sidebar-collapsed]="sidebarCollapsed()">
-      <aside class="pvx-sidebar">
-        <div class="pvx-sidebar-header">
-          <span class="pvx-logo">🔭</span>
-          @if (!sidebarCollapsed()) {
-            <span class="pvx-brand">Paarvix</span>
-          }
-          <button class="pvx-sidebar-toggle" (click)="toggleSidebar()">☰</button>
-        </div>
-        <nav class="pvx-nav">
-          <a routerLink="/dashboards" routerLinkActive="active" class="pvx-nav-item">
-            <span class="pvx-nav-icon">📊</span>
-            @if (!sidebarCollapsed()) {
-              <span>{{ 'nav.dashboards' | translate }}</span>
-            }
-          </a>
-          <a routerLink="/datasources" routerLinkActive="active" class="pvx-nav-item">
-            <span class="pvx-nav-icon">🔌</span>
-            @if (!sidebarCollapsed()) {
-              <span>{{ 'nav.datasources' | translate }}</span>
-            }
-          </a>
-          <a routerLink="/queries" routerLinkActive="active" class="pvx-nav-item">
-            <span class="pvx-nav-icon">🔍</span>
-            @if (!sidebarCollapsed()) {
-              <span>{{ 'nav.queries' | translate }}</span>
-            }
-          </a>
-          <a routerLink="/templates" routerLinkActive="active" class="pvx-nav-item">
-            <span class="pvx-nav-icon">📋</span>
-            @if (!sidebarCollapsed()) {
-              <span>{{ 'nav.templates' | translate }}</span>
-            }
-          </a>
-          <a routerLink="/settings" routerLinkActive="active" class="pvx-nav-item">
-            <span class="pvx-nav-icon">⚙️</span>
-            @if (!sidebarCollapsed()) {
-              <span>{{ 'nav.settings' | translate }}</span>
-            }
-          </a>
-        </nav>
-        <div class="pvx-sidebar-footer">
-          <button class="pvx-nav-item" (click)="themeService.toggle()">
-            <span class="pvx-nav-icon">{{ themeService.theme() === 'dark' ? '☀️' : '🌙' }}</span>
-            @if (!sidebarCollapsed()) {
-              <span>{{ themeService.theme() === 'dark' ? 'Light' : 'Dark' }}</span>
-            }
+    <div class="pvx-shell" [class.collapsed]="collapsed()">
+      <aside class="pvx-sidebar pvx-admin-area">
+        <div class="head">
+          @if (!collapsed()) { <span class="brand">{{ theme.orgName() }}</span> }
+          <button class="icon-btn" type="button" (click)="collapsed.set(!collapsed())"
+            [attr.aria-label]="(collapsed() ? 'nav.expand' : 'nav.collapse') | translate" [attr.aria-expanded]="!collapsed()">
+            <pvx-icon name="menu" />
           </button>
-          <button class="pvx-nav-item" (click)="authService.logout()">
-            <span class="pvx-nav-icon">🚪</span>
-            @if (!sidebarCollapsed()) {
-              <span>{{ 'nav.logout' | translate }}</span>
+        </div>
+
+        <nav class="nav" [attr.aria-label]="'nav.main' | translate">
+          @if (workspace().length) {
+            @if (!collapsed()) { <h2 class="section">{{ 'nav.workspace' | translate }}</h2> }
+            @for (item of workspace(); track item.path) {
+              <a [routerLink]="item.path" routerLinkActive="active" class="item" [attr.title]="collapsed() ? (item.label | translate) : null">
+                <pvx-icon [name]="item.icon" />
+                @if (!collapsed()) { <span>{{ item.label | translate }}</span> }
+              </a>
             }
+          }
+          @if (admin().length) {
+            @if (!collapsed()) { <h2 class="section">{{ 'nav.administration' | translate }}</h2> } @else { <hr /> }
+            @for (item of admin(); track item.path) {
+              <a [routerLink]="item.path" routerLinkActive="active" class="item" [attr.title]="collapsed() ? (item.label | translate) : null">
+                <pvx-icon [name]="item.icon" />
+                @if (!collapsed()) { <span>{{ item.label | translate }}</span> }
+              </a>
+            }
+          }
+        </nav>
+
+        <div class="foot">
+          @if (auth.user(); as u) {
+            @if (!collapsed()) {
+              <div class="me"><strong>{{ u.name }}</strong><span>{{ u.roleName }}</span></div>
+            }
+          }
+          <button class="item" type="button" (click)="theme.toggle()" [attr.title]="collapsed() ? ((theme.theme() === 'dark' ? 'nav.light' : 'nav.dark') | translate) : null">
+            <pvx-icon [name]="theme.theme() === 'dark' ? 'sun' : 'moon'" />
+            @if (!collapsed()) { <span>{{ (theme.theme() === 'dark' ? 'nav.light' : 'nav.dark') | translate }}</span> }
+          </button>
+          <button class="item" type="button" (click)="auth.logout()" [attr.title]="collapsed() ? ('nav.logout' | translate) : null">
+            <pvx-icon name="logout" />
+            @if (!collapsed()) { <span>{{ 'nav.logout' | translate }}</span> }
           </button>
         </div>
       </aside>
 
-      <main class="pvx-main">
+      <main class="pvx-main" [class.pvx-admin-area]="inAdmin()">
         <router-outlet />
       </main>
     </div>
   `,
   styles: [`
-    .pvx-shell {
-      display: flex;
-      min-height: 100vh;
-    }
-
-    .pvx-sidebar {
-      width: 240px;
-      background: var(--pvx-bg-sidebar);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      transition: width 250ms ease;
-      overflow: hidden;
-    }
-
-    .sidebar-collapsed .pvx-sidebar {
-      width: 64px;
-    }
-
-    .sidebar-collapsed .pvx-logo {
-      display: none;
-    }
-
-    .pvx-sidebar-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .pvx-logo {
-      font-size: 24px;
-    }
-
-    .pvx-brand {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-      font-size: 18px;
-      white-space: nowrap;
-    }
-
-    .pvx-sidebar-toggle {
-      margin-left: auto;
-      background: none;
-      border: none;
-      color: #fff;
-      cursor: pointer;
-      font-size: 18px;
-      padding: 4px;
-      border-radius: 4px;
-      &:hover { background: rgba(255, 255, 255, 0.1); }
-    }
-
-    .pvx-nav {
-      flex: 1;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .pvx-nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      transition: all 150ms ease;
-      cursor: pointer;
-      border: none;
-      background: none;
-      font-size: 14px;
-      width: 100%;
-      text-align: left;
-      white-space: nowrap;
-
-      &:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
-      &.active { background: rgba(255, 255, 255, 0.15); color: #fff; }
-    }
-
-    .pvx-nav-icon {
-      font-size: 18px;
-      flex-shrink: 0;
-      width: 24px;
-      text-align: center;
-    }
-
-    .pvx-sidebar-footer {
-      padding: 8px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .pvx-main {
-      flex: 1;
-      min-width: 0;
-      padding: clamp(12px, 3vw, 24px);
-      overflow-y: auto;
-    }
+    .pvx-shell { display: flex; min-height: 100vh; }
+    .pvx-sidebar { width: 248px; flex-shrink: 0; background: var(--pvx-bg-sidebar); color: var(--pvx-sidebar-text);
+      display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; transition: width 200ms cubic-bezier(.2,.8,.2,1); }
+    .collapsed .pvx-sidebar { width: 68px; }
+    .head { display: flex; align-items: center; gap: 8px; padding: 16px 12px 16px 20px; min-height: 64px; }
+    .collapsed .head { padding: 16px 12px; justify-content: center; }
+    .brand { font: 600 19px var(--pvx-font-brand); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .icon-btn { margin-left: auto; display: inline-flex; padding: 8px; border: 0; border-radius: 8px; background: none; color: var(--pvx-sidebar-text); cursor: pointer; }
+    .collapsed .icon-btn { margin: 0; }
+    .icon-btn:hover { background: var(--pvx-sidebar-hover); color: #fff; }
+    .nav { flex: 1; padding: 4px 10px; display: flex; flex-direction: column; gap: 2px; }
+    .section { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--pvx-sidebar-muted); padding: 18px 10px 6px; }
+    .section:first-child { padding-top: 4px; }
+    hr { border: 0; border-top: 1px solid rgba(255,255,255,.14); margin: 10px 6px; }
+    .item { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 10px; border-radius: 8px; border: 0; background: none;
+      color: var(--pvx-sidebar-text); font: 500 14px var(--pvx-font-ui); text-decoration: none; cursor: pointer; width: 100%; text-align: left; white-space: nowrap; }
+    .collapsed .item { justify-content: center; padding: 0; }
+    .item:hover { background: var(--pvx-sidebar-hover); color: #fff; text-decoration: none; }
+    .item.active { background: #fff; color: var(--pvx-brand-primary); font-weight: 600; }
+    .item:focus-visible { outline-color: #fdba74; }
+    .foot { padding: 10px; border-top: 1px solid rgba(255,255,255,.14); display: flex; flex-direction: column; gap: 2px; }
+    .me { display: flex; flex-direction: column; padding: 6px 10px 10px; font-size: 14px; color: #fff; }
+    .me span { font-size: 12px; color: var(--pvx-sidebar-muted); }
+    .pvx-main { flex: 1; min-width: 0; padding: clamp(16px, 3vw, 32px); }
+    @media (max-width: 768px) { .pvx-sidebar { position: fixed; z-index: 20; } .pvx-main { margin-left: 68px; } }
   `],
 })
-export class ShellComponent {
-  sidebarCollapsed = signal(window.matchMedia('(max-width: 768px)').matches); // the full menu would fill a phone screen
-  readonly authService = inject(AuthService);
-  readonly themeService = inject(ThemeService);
+export class ShellComponent implements OnInit {
+  readonly auth = inject(AuthService);
+  readonly theme = inject(ThemeService);
+  private readonly api = inject(AdminApiService);
+  private readonly router = inject(Router);
 
-  toggleSidebar() {
-    this.sidebarCollapsed.update((v) => !v);
+  readonly collapsed = signal(window.matchMedia('(max-width: 768px)').matches); // the full menu would fill a phone screen
+
+  private readonly url = toSignal(
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd), map(() => this.router.url)),
+    { initialValue: this.router.url },
+  );
+  readonly inAdmin = computed(() => ADMIN_PREFIXES.some((p) => this.url().startsWith(p)));
+
+  /** Reading user() inside makes these recompute when the user loads. */
+  readonly workspace = computed(() => (this.auth.user(), WORKSPACE.filter((i) => this.auth.can(i.permission))));
+  readonly admin = computed(() => (this.auth.user(), ADMIN.filter((i) => this.auth.can(i.permission))));
+
+  ngOnInit() {
+    this.auth.ensureUser().subscribe();
+    this.api.settings().subscribe({
+      next: (s) => {
+        this.theme.orgName.set(s.org.name);
+        this.theme.applyTokens(s.theme);
+      },
+      error: () => undefined, // the default design stays in place
+    });
   }
 }

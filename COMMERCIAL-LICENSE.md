@@ -17,7 +17,7 @@ Commercial licenses are priced per deployment and use case. Contact us for a quo
 
 ## Contact
 
-**Email:** paarvix@kannantech.com  
+**Email:** support@kannantech.com  
 **Web:** https://kannantech.com  
 
 © 2026 Kannan / KannanTech. All rights reserved.

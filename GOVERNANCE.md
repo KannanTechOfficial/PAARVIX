@@ -24,6 +24,6 @@ The roadmap is defined in [AGENTS.md](AGENTS.md) §13 and updated quarterly.
 
 ## Contact
 
-paarvix@kannantech.com
+support@kannantech.com
 
 © 2026 Kannan / KannanTech. All rights reserved.

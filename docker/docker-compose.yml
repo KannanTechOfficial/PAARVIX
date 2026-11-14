@@ -38,8 +38,14 @@ services:
       API_PORT: 3000
       API_HOST: 0.0.0.0
       CORS_ORIGINS: http://localhost:4200,http://localhost:80
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:4200}
+      # nginx in the web container sets the visitor address; only the Docker network is believed.
+      TRUSTED_PROXIES: 172.16.0.0/12
+    # Only this machine can reach the API directly; everyone else goes through the web container.
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
 
   web:
     build:

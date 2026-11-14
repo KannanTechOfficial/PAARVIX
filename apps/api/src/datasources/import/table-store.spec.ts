@@ -2,7 +2,7 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 // Needs a disposable database with the Prisma schema pushed, so it only runs when you point it at one:
@@ -27,7 +27,7 @@ jest.setTimeout(60000);
 
 const url = process.env.PAARVIX_TEST_DATABASE_URL;
 if (url) process.env.DATABASE_URL = url; // before any TableStore exists, so none can reach a different database
-const ctx: SecurityContext = { userId: 'u', role: 'ADMIN', tenantId: null, rowFilters: [] };
+const ctx: SecurityContext = { userId: 'u', role: 'ADMIN', permissions: [], tenantId: null, rowFilters: [] };
 
 describe('sqlState', () => {
   it('reads codes from the database server only, never Node system errors', () => {

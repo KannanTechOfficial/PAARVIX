@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-14T14:30:31.787Z",
+        "reason": "user confirmed 2026-11-14: Inter is a binding brand font in CLAUDE.md"
+      }
+    ]
+  }
+}

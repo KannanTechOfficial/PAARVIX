@@ -2,16 +2,18 @@
  * Paarvix — See your data clearly.
  * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
  * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
- * Commercial licenses: paarvix@kannantech.com
+ * Commercial licenses: support@kannantech.com
  */
 
 import { Body, Controller, Delete, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { JwtAuthGuard } from '../auth/auth.guard';
+import { PermissionsGuard, RequirePermissions } from '../access/permissions.guard';
 import { TemplatesService } from './templates.service';
 
 @Controller('templates')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequirePermissions('templates:apply')
 export class TemplatesController {
   constructor(private readonly templatesService: TemplatesService) {}
 
