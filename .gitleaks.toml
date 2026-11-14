@@ -23,3 +23,5 @@ regex = '''(?i)\bpassword\s*[:=]\s*['"][^'"\s]{8,}['"]'''
 paths = ['''package-lock\.json$''', '''\.gitleaks\.toml$''']
 # Made-up numbers that test phone-number handling.
 regexes = ['''9876543210''', '''9123456780''']
+# This commit used a made-up 12-digit register number (912625104001) in help text; it is not an Aadhaar number.
+commits = ['7ece117e4ba05a91c7fb9dbf850e752a47ae28d6']

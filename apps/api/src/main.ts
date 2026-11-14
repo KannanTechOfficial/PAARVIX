@@ -12,12 +12,13 @@ import {
 } from '@nestjs/platform-fastify';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { loadOptionalModules } from './extensions/optional-modules';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
+    AppModule.withOptional(await loadOptionalModules()),
     new FastifyAdapter({
       logger: true,
       // The visitor's real address comes from X-Forwarded-For, believed only from these proxies.

@@ -8,6 +8,19 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
+/** One feature, its edition, and whether this install may use it. */
+export interface FeatureRow { id: string; label: string; edition: 'community' | 'pro' | 'enterprise'; built: boolean; enabled: boolean }
+
+export interface LicenseStatusView {
+  state: 'community' | 'active' | 'grace' | 'expired' | 'invalid';
+  edition: 'community' | 'pro' | 'enterprise';
+  customer?: string; licenseId?: string; licensedEdition?: 'pro' | 'enterprise';
+  expiresAt?: string; graceEndsAt?: string; daysLeft?: number;
+  limits?: { users?: number; tenants?: number; aiCredits?: number };
+  problem?: string; instanceId: string; fromEnvironment: boolean;
+  features: FeatureRow[];
+}
+
 export interface RoleRef { id: string; key: string; name: string }
 
 export interface AdminUser {
@@ -37,7 +50,7 @@ export interface Role {
 
 export interface PermissionCatalog {
   groups: { id: string; label: string; permissions: { id: string; label: string }[] }[];
-  features: { id: string; label: string; enabled: boolean }[];
+  features: FeatureRow[];
 }
 
 export interface AccessMatrix {
@@ -83,6 +96,18 @@ export class AdminApiService {
   updateUser(id: string, body: Partial<{ name: string; roleId: string; isActive: boolean; language: string; department: string | null; homeDashboardId: string | null; attributes: Record<string, string> }>) {
     return this.http.patch<AdminUser>(`/api/users/${encodeURIComponent(id)}`, body);
   }
+  license() {
+    return this.http.get<LicenseStatusView>('/api/license');
+  }
+
+  activateLicense(key: string) {
+    return this.http.post<LicenseStatusView>('/api/license', { key });
+  }
+
+  removeLicense() {
+    return this.http.delete<LicenseStatusView>('/api/license');
+  }
+
   /** Signs a person out on every device they are signed in on. */
   revokeSessions(id: string) {
     return this.http.post<{ ended: number }>(`/api/users/${encodeURIComponent(id)}/sessions/revoke`, {});

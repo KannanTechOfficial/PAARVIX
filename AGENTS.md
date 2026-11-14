@@ -162,8 +162,8 @@
 - Annotations on time series (events like "exam week"). *(P2)*
 
 ### 7.10 Governance, Security & Admin
-- Users, teams, roles: admin/editor/analyst/viewer *(P1)*; custom roles & granular permissions *(P2 Pro)*.
-- **Row-level & column-level security** (e.g., HOD sees own department, salary column hidden). *(P2 Pro)*
+- Users, teams, roles: admin/editor/analyst/viewer *(P1)*; custom roles & granular permissions *(Community, founder decision 2026-11-14)*.
+- **Row-level security** (e.g., HOD sees own department) *(Community, founder decision 2026-11-14)*; column hiding and row rules looked up from a table *(P2 Pro)*. The edition of every feature is set in `packages/shared/src/editions.ts`; see `docs/editions.md`.
 - SSO: Google, Microsoft, OIDC, SAML; **SCIM** provisioning. *(P3 Enterprise)*
 - 2FA TOTP *(P1)*, WebAuthn/passkeys *(P2)*.
 - Audit log (immutable, exportable, SIEM forward). *(P2 Pro)*

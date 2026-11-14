@@ -21,7 +21,8 @@
     "collapse": "Collapse menu",
     "light": "Light mode",
     "dark": "Dark mode",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "license": "Licence"
   },
   "auth": {
     "login": "Login",
@@ -177,9 +178,9 @@
       "homeRole": "Role's default",
       "homeChanged": "Home dashboard changed for {{name}}.",
       "attributes": "Attributes",
-      "attributesHint": "reg_no=912625104001",
+      "attributesHint": "reg_no=23CS001",
       "attributesSaved": "Attributes saved for {{name}}.",
-      "attributesBad": "\"{{part}}\" should be name=value, for example reg_no=912625104001.",
+      "attributesBad": "\"{{part}}\" should be name=value, for example reg_no=23CS001.",
       "signOutEverywhere": "Sign out everywhere",
       "signOutEverywhereHint": "Ends every session this person has, for example after a lost phone or laptop",
       "signedOutEverywhere": "{{name}} was signed out on {{count}} device(s)."
@@ -568,5 +569,42 @@
     },
     "unknownDevice": "Unknown browser",
     "loadError": "Could not load your devices. Try again."
+  },
+  "license": {
+    "title": "Licence",
+    "lead": "Which edition of Paarvix this server runs. Community is free forever; a licence adds Pro or Enterprise features.",
+    "current": "This server runs",
+    "for": "Licensed to {{customer}}",
+    "editions": {
+      "community": "Community",
+      "pro": "Pro",
+      "enterprise": "Enterprise"
+    },
+    "state": {
+      "community": "Free",
+      "active": "Active",
+      "grace": "Expired, grace period",
+      "expired": "Expired",
+      "invalid": "Licence refused"
+    },
+    "expires": "Valid until {{date}} ({{days}} days left).",
+    "graceNote": "This licence has expired. Paid features keep working until {{date}}; renew before then. Your data is never locked.",
+    "expiredNote": "This licence has expired, so paid features are off. Everything in Community keeps working, and no data is hidden.",
+    "communityNote": "All Community features are on. Nothing here limits your data, users or dashboards.",
+    "instance": "Server id (send this if your licence is for one server):",
+    "fromEnv": "This licence is set by the PAARVIX_LICENSE setting on the server, so it can only be changed there.",
+    "add": "Add or replace a licence",
+    "addHint": "Paste the licence key from KannanTech. It is checked on this server; no internet is needed.",
+    "key": "Licence key",
+    "keyPlaceholder": "PVX1.…",
+    "activate": "Activate",
+    "remove": "Remove licence",
+    "activated": "Licence activated.",
+    "removed": "Licence removed. This server now runs Community.",
+    "whatsIncluded": "What's included",
+    "communityAlways": "Free forever, on every server.",
+    "coming": "Coming",
+    "needs": "Needs a licence",
+    "contact": "For Pro or Enterprise, write to"
   }
 }

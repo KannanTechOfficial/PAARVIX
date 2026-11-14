@@ -24,7 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Row rules: each person sees only their own rows (for example a student's own record, or an HOD's own department), enforced on the server for every dashboard, query and preview.
 - `./dev.sh` runs Paarvix on a laptop with live reload, using only Paarvix's own database container.
 
+### Editions
+
+- Paarvix now has three editions: Community (free for ever), Pro and Enterprise (see `docs/editions.md`, ADR 0003). Custom roles, per-source access, theme and row rules stay in Community.
+- New *Licence* page in Administration: shows the edition this server runs and what each edition includes, and lets a Super Admin paste a licence key. Keys are checked on the server with no internet; `PAARVIX_LICENSE` and `PAARVIX_LICENSE_FILE` also work. An expired licence keeps paid features for 30 days; Community features and data are never locked.
+- Extension points for optional modules, and a CI check that keeps Community features free and paid code out of this repository.
+
 ### Fixed
+
+- CI secret scan: a made-up 12-digit register number in help text looked like an Aadhaar number. The example is now `23CS001`.
 
 - Sign out now really signs out. Before, the login page could open before the server had deleted the session cookie, and signed the person straight back in.
 - After Google sign-in, people land on their home dashboard. The Sign in button no longer stays on "Loading" if the next page cannot open.

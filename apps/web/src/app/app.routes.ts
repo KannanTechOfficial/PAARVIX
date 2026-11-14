@@ -5,6 +5,7 @@
  * Commercial licenses: support@kannantech.com
  */
 
+import { OPTIONAL_ROUTES } from './optional-routes';
 import { Routes } from '@angular/router';
 import { authGuard, homeRedirect, loginGuard, setupGuard } from './core/guards/auth.guard';
 import { ShellComponent } from './core/layout/shell/shell.component';
@@ -118,6 +119,12 @@ export const routes: Routes = [
         canActivate: [permissionGuard('settings:write')],
         loadComponent: () => import('./features/admin/settings.component').then((m) => m.AdminSettingsComponent),
       },
+      {
+        path: 'admin/license',
+        canActivate: [permissionGuard('settings:write')],
+        loadComponent: () => import('./features/admin/license.component').then((m) => m.AdminLicenseComponent),
+      },
+      ...OPTIONAL_ROUTES,
       { path: 'admin', redirectTo: 'admin/users', pathMatch: 'full' },
       { path: '', redirectTo: 'home', pathMatch: 'full' },
     ],

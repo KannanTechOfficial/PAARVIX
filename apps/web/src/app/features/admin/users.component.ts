@@ -211,7 +211,7 @@ export class UsersComponent implements OnInit {
     this.dashApi.list().subscribe({ next: (d) => this.dashboards.set(d.filter((x) => !x.template)), error: () => undefined });
   }
 
-  /** Shown and edited as "reg_no=912625104001, district=Madurai". */
+  /** Shown and edited as "reg_no=23CS001, district=Madurai". */
   attrText(u: AdminUser): string {
     return Object.entries(u.attributes ?? {}).map(([k, v]) => `${k}=${v}`).join(', ');
   }

@@ -68,3 +68,4 @@ export interface SchemaMetadata {
 }
 export * from './describe-sql';
 export * from './dashboard';
+export * from './editions';

@@ -6,30 +6,29 @@
  */
 
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { GATED_FEATURES, type GatedFeature } from '@paarvix/shared';
+import { ALL_FEATURES, FEATURES, type Edition, type Feature } from '@paarvix/shared';
+import { LicenseService } from '../license/license.service';
 
 /**
- * The one place a feature that may become Pro is checked.
- * Every gate is open until the free/Pro split is decided before the first public release
- * (founder decision, 2026-11-14). The licence system will replace isEnabled.
+ * The one place a feature's edition is checked. Community features are always on;
+ * Pro and Enterprise features need a licence (see editions.ts and LicenseService).
  */
 @Injectable()
 export class FeaturesService {
-  isEnabled(_feature: GatedFeature): boolean {
-    return true;
+  constructor(private readonly license: LicenseService) {}
+
+  isEnabled(feature: Feature): boolean {
+    return this.license.allows(feature);
   }
 
-  assertEnabled(feature: GatedFeature): void {
+  assertEnabled(feature: Feature): void {
     if (!this.isEnabled(feature)) {
-      throw new ForbiddenException(`${GATED_FEATURES[feature]} needs a licence`);
+      const f = FEATURES[feature];
+      throw new ForbiddenException(`${f.label} is part of Paarvix ${f.edition === 'pro' ? 'Pro' : 'Enterprise'}. Add a licence in Administration → Licence.`);
     }
   }
 
-  list(): { id: GatedFeature; label: string; enabled: boolean }[] {
-    return (Object.keys(GATED_FEATURES) as GatedFeature[]).map((id) => ({
-      id,
-      label: GATED_FEATURES[id],
-      enabled: this.isEnabled(id),
-    }));
+  list(): { id: Feature; label: string; edition: Edition; built: boolean; enabled: boolean }[] {
+    return ALL_FEATURES.map((id) => ({ id, label: FEATURES[id].label, edition: FEATURES[id].edition, built: FEATURES[id].built, enabled: this.isEnabled(id) }));
   }
 }

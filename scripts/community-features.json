@@ -1,0 +1,9 @@
+{
+  "_note": "Features promised free forever. CI fails if any of these stops being Community. Add new Community features here; never remove one.",
+  "features": [
+    "datasources.access",
+    "roles.custom",
+    "rows.rules",
+    "theme.custom"
+  ]
+}

@@ -1,0 +1,14 @@
+/*
+ * Paarvix — See your data clearly.
+ * Copyright (C) 2026 Kannan / KannanTech (kannantech.com)
+ * Licensed under the GNU Affero General Public License v3.0. See LICENSE.
+ * Commercial licenses: support@kannantech.com
+ */
+
+import type { Routes } from '@angular/router';
+
+/**
+ * Pages added by optional modules. Empty in Community. The Paarvix Pro build replaces this file
+ * with one that lazy-loads its pages; CI fails if the public repository's copy is not empty.
+ */
+export const OPTIONAL_ROUTES: Routes = [];

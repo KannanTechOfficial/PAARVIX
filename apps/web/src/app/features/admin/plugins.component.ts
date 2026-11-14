@@ -57,9 +57,10 @@ import { AdminApiService, type ConnectorInfo, type PermissionCatalog, errorText 
           <tbody>
             @for (f of features(); track f.id) {
               <tr>
-                <td>{{ 'admin.features.' + f.id | translate }}</td>
+                <td>{{ f.label }}</td>
+                <td><span class="pvx-tag">{{ ('license.editions.' + f.edition) | translate }}</span></td>
                 <td class="end">
-                  <span class="pvx-tag" [class.ok]="f.enabled">{{ (f.enabled ? 'admin.plugins.on' : 'admin.plugins.off') | translate }}</span>
+                  <span class="pvx-tag" [class.ok]="f.enabled">{{ (!f.built ? 'license.coming' : f.enabled ? 'admin.plugins.on' : 'admin.plugins.off') | translate }}</span>
                 </td>
               </tr>
             }

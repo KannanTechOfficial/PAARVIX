@@ -31,6 +31,7 @@ const ADMIN: NavItem[] = [
   { path: '/admin/access', label: 'nav.access', icon: 'access', permission: 'datasources:access' },
   { path: '/admin/plugins', label: 'nav.plugins', icon: 'plugins', permission: 'plugins:read' },
   { path: '/admin/settings', label: 'nav.settings', icon: 'settings', permission: 'settings:write' },
+  { path: '/admin/license', label: 'nav.license', icon: 'lock', permission: 'settings:write' },
 ];
 
 /** Routes drawn in the default design whatever the theme, so admins can always repair it. */

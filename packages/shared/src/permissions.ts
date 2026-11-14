@@ -93,16 +93,5 @@ export function isPermission(value: string): value is Permission {
   return Object.prototype.hasOwnProperty.call(PERMISSIONS, value);
 }
 
-/**
- * Features that may become Pro. Founder decision, 2026-11-14: everything is open now,
- * and the free/Pro split is decided before the first public release, so nothing that
- * has shipped free is taken away later. The licence system (P2) will read this list.
- */
-export const GATED_FEATURES = {
-  'roles.custom': 'Create and edit custom roles',
-  'datasources.access': 'Per-data-source access by role',
-  'theme.custom': 'Custom theme',
-  'rows.rules': 'Row rules: each person sees only their own rows',
-} as const;
+// Feature editions (Community, Pro, Enterprise) live in editions.ts.
 
-export type GatedFeature = keyof typeof GATED_FEATURES;

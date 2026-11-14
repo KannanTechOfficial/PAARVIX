@@ -30,7 +30,7 @@ model User {
   department   String?
   /// Raised when a password is reset or the account is deactivated. Sessions themselves are ended in the sessions table.
   sessionVersion Int       @default(0) @map("session_version")
-  /// Values row rules compare against, e.g. {"reg_no": "912625104001"}. Email and department are added automatically.
+  /// Values row rules compare against, e.g. {"reg_no": "23CS001"}. Email and department are added automatically.
   attributes   Json        @default("{}")
   /// Overrides the role's home dashboard for this one person.
   homeDashboardId String?  @map("home_dashboard_id")
